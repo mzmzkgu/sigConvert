@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SigMask — File Signature Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00ff88;
+    --accent2: #ff4466;
+    --accent3: #4488ff;
+    --text: #e8e8f0;
+    --muted: #666680;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* Header */
+  header {
+    margin-bottom: 48px;
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+  }
+
+  .logo-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .logo-tag {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(32px, 6vw, 52px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-top: 8px;
+  }
+
+  /* Tab bar */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 32px;
+    background: var(--surface);
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 14px 20px;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .tab-btn:first-child { border-right: 1px solid var(--border); }
+
+  .tab-btn.active {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .tab-btn.active.hide-tab::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent2);
+  }
+
+  .tab-btn.active.restore-tab::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-red { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .dot-green { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+  /* Panel */
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Drop zone */
+  .dropzone {
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    padding: 48px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent3);
+    background: rgba(68,136,255,0.04);
+  }
+
+  .dropzone.hide-zone:hover, .dropzone.hide-zone.dragover {
+    border-color: var(--accent2);
+    background: rgba(255,68,102,0.04);
+  }
+
+  .dropzone input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .drop-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .drop-title {
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .drop-sub {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* File info card */
+  .file-card {
+    display: none;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-top: 16px;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .file-card.visible { display: flex; }
+
+  .file-icon-big { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+
+  .file-meta { flex: 1; min-width: 0; }
+  .file-name {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+  .file-size { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+
+  /* Hex display */
+  .hex-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+
+  .hex-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  .hex-bytes {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .hex-byte {
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    letter-spacing: 0.05em;
+    font-family: var(--mono);
+  }
+
+  .hex-byte.original { color: var(--accent3); border-color: rgba(68,136,255,0.3); }
+  .hex-byte.modified { color: var(--accent2); border-color: rgba(255,68,102,0.3); }
+  .hex-byte.restored { color: var(--accent); border-color: rgba(0,255,136,0.3); }
+
+  .sig-detected {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .sig-detected.known {
+    background: rgba(68,136,255,0.1);
+    color: var(--accent3);
+    border: 1px solid rgba(68,136,255,0.3);
+  }
+
+  .sig-detected.unknown {
+    background: rgba(102,102,128,0.1);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  /* Options */
+  .options-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-top: 16px;
+  }
+
+  .options-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .option-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .option-row:last-child { margin-bottom: 0; }
+
+  .option-label {
+    font-size: 12px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .option-desc {
+    font-size: 10px;
+    color: var(--muted);
+    display: block;
+    margin-top: 2px;
+  }
+
+  select, input[type=number] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 160px;
+  }
+
+  select:focus, input[type=number]:focus {
+    border-color: var(--accent3);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 28px;
+    border-radius: 8px;
+    border: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 20px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .btn-hide {
+    background: var(--accent2);
+    color: #fff;
+    box-shadow: 0 0 24px rgba(255,68,102,0.25);
+  }
+
+  .btn-hide:not(:disabled):hover {
+    box-shadow: 0 0 36px rgba(255,68,102,0.45);
+    transform: translateY(-1px);
+  }
+
+  .btn-restore {
+    background: var(--accent);
+    color: #0a0a0f;
+    box-shadow: 0 0 24px rgba(0,255,136,0.2);
+  }
+
+  .btn-restore:not(:disabled):hover {
+    box-shadow: 0 0 36px rgba(0,255,136,0.4);
+    transform: translateY(-1px);
+  }
+
+  /* Result */
+  .result-block {
+    display: none;
+    margin-top: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .result-block.visible { display: block; }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .result-status {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .result-status.success-hide { color: var(--accent2); }
+  .result-status.success-restore { color: var(--accent); }
+
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    margin-top: 8px;
+    letter-spacing: 0.08em;
+  }
+
+  .download-btn:hover {
+    border-color: var(--accent3);
+    color: var(--accent3);
+  }
+
+  /* Warning */
+  .warn-box {
+    background: rgba(255,190,30,0.06);
+    border: 1px solid rgba(255,190,30,0.25);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 11px;
+    color: #ffcc44;
+    line-height: 1.6;
+    margin-top: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .warn-icon { flex-shrink: 0; margin-top: 1px; }
+
+  /* Spinner */
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  /* Footer */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    padding: 24px;
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+  }
+
+  /* Scanline effect */
+  .panel-wrap {
+    position: relative;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo-block">
+      <span class="logo-tag">// file forensics tool v1.0</span>
+      <h1>Sig<span>Mask</span></h1>
+      <p class="subtitle">FILE SIGNATURE OBFUSCATION &amp; RECOVERY UTILITY</p>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn hide-tab active" onclick="switchTab('hide')">
+      <span class="dot dot-red"></span>
+      시그니처 변형
+    </button>
+    <button class="tab-btn restore-tab" onclick="switchTab('restore')">
+      <span class="dot dot-green"></span>
+      시그니처 복구
+    </button>
+  </div>
+
+  <!-- HIDE PANEL -->
+  <div class="panel active panel-wrap" id="panel-hide">
+
+    <div class="dropzone hide-zone" id="dropzone-hide">
+      <input type="file" id="file-hide" onchange="loadFile('hide')">
+      <span class="drop-icon">🔒</span>
+      <div class="drop-title">변형할 파일을 드롭하거나 클릭</div>
+      <div class="drop-sub">모든 파일 형식 지원 · 클라이언트 전용 처리</div>
+    </div>
+
+    <div class="file-card" id="file-card-hide">
+      <span class="file-icon-big">📄</span>
+      <div class="file-meta">
+        <div class="file-name" id="fname-hide">—</div>
+        <div class="file-size" id="fsize-hide">—</div>
+        <div class="hex-row">
+          <span class="hex-label">ORIGINAL</span>
+          <div class="hex-bytes" id="hex-original-hide"></div>
+        </div>
+        <span class="sig-detected" id="sig-type-hide"></span>
+      </div>
+    </div>
+
+    <div class="options-block">
+      <div class="options-title">// 변형 옵션</div>
+      <div class="option-row">
+        <div class="option-label">
+          변형 방식
+          <span class="option-desc">파일 앞부분 처리 알고리즘</span>
+        </div>
+        <select id="method-hide">
+          <option value="xor">XOR (대칭 복구)</option>
+          <option value="zero">NULL 덮어쓰기</option>
+          <option value="reverse">바이트 반전 (NOT)</option>
+        </select>
+      </div>
+      <div class="option-row">
+        <div class="option-label">
+          변형 크기
+          <span class="option-desc">앞에서 N 바이트 변형</span>
+        </div>
+        <input type="number" id="sig-size" value="8" min="1" max="64">
+      </div>
+    </div>
+
+    <div class="warn-box">
+      <span class="warn-icon">⚠️</span>
+      <span>변형된 파일을 실행하거나 열려고 하면 오류가 발생함. 원본 복구는 <strong>복구 탭</strong>에서 처리. NULL 덮어쓰기 방식은 별도 메타데이터 저장 필요.</span>
+    </div>
+
+    <button class="btn btn-hide" id="btn-hide" disabled onclick="processHide()">
+      🔒 시그니처 변형 실행
+    </button>
+
+    <div class="result-block" id="result-hide">
+      <div class="result-header">
+        <span>🔒</span>
+        <span class="result-status success-hide">변형 완료</span>
+      </div>
+      <div class="hex-row">
+        <span class="hex-label">BEFORE</span>
+        <div class="hex-bytes" id="hex-before-result"></div>
+      </div>
+      <div class="hex-row">
+        <span class="hex-label">AFTER</span>
+        <div class="hex-bytes" id="hex-after-result"></div>
+      </div>
+      <a class="download-btn" id="dl-hidden">⬇ 변형된 파일 다운로드</a>
+      <a class="download-btn" id="dl-meta" style="margin-left:8px">⬇ 메타데이터 (.sigmask) 다운로드</a>
+    </div>
+  </div>
+
+  <!-- RESTORE PANEL -->
+  <div class="panel panel-wrap" id="panel-restore">
+
+    <div class="dropzone" id="dropzone-restore">
+      <input type="file" id="file-restore" onchange="loadFile('restore')">
+      <span class="drop-icon">🔓</span>
+      <div class="drop-title">변형된 파일을 드롭하거나 클릭</div>
+      <div class="drop-sub">모든 파일 형식 지원 · 클라이언트 전용 처리</div>
+    </div>
+
+    <div class="file-card" id="file-card-restore">
+      <span class="file-icon-big">📄</span>
+      <div class="file-meta">
+        <div class="file-name" id="fname-restore">—</div>
+        <div class="file-size" id="fsize-restore">—</div>
+        <div class="hex-row">
+          <span class="hex-label">CURRENT</span>
+          <div class="hex-bytes" id="hex-original-restore"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="options-block">
+      <div class="options-title">// 복구 옵션</div>
+      <div class="option-row">
+        <div class="option-label">
+          복구 방식
+          <span class="option-desc">변형 시 사용한 방식과 동일하게 선택</span>
+        </div>
+        <select id="method-restore">
+          <option value="xor">XOR (키로 복구)</option>
+          <option value="meta">메타데이터 파일로 복구 (.sigmask)</option>
+          <option value="reverse">바이트 반전 (NOT)</option>
+        </select>
+      </div>
+      <div id="xor-restore-opts">
+        <div class="option-row">
+          <div class="option-label">
+            XOR 키 (0~255)
+            <span class="option-desc">변형 시 사용한 키 (기본: 170 = 0xAA)</span>
+          </div>
+          <input type="number" id="xor-key-restore" value="170" min="0" max="255">
+        </div>
+        <div class="option-row">
+          <div class="option-label">
+            복구 크기 (바이트)
+            <span class="option-desc">변형 시 처리한 바이트 수</span>
+          </div>
+          <input type="number" id="sig-size-restore" value="8" min="1" max="64">
+        </div>
+      </div>
+      <div id="meta-restore-opts" style="display:none;">
+        <div class="option-row">
+          <div class="option-label">
+            메타데이터 파일
+            <span class="option-desc">.sigmask 파일 선택</span>
+          </div>
+          <label style="cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+            padding:7px 14px; border:1px solid var(--border); border-radius:6px;
+            font-size:12px; font-family:var(--mono); color:var(--text); transition:border-color 0.2s;"
+            onmouseover="this.style.borderColor='#4488ff'" onmouseout="this.style.borderColor='#2a2a3a'">
+            📎 파일 선택
+            <input type="file" id="meta-file" accept=".sigmask" style="display:none" onchange="loadMeta()">
+          </label>
+          <span id="meta-filename" style="font-size:11px; color:var(--muted); margin-left:8px;"></span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-restore" id="btn-restore" disabled onclick="processRestore()">
+      🔓 원본 복구 실행
+    </button>
+
+    <div class="result-block" id="result-restore">
+      <div class="result-header">
+        <span>✅</span>
+        <span class="result-status success-restore">복구 완료</span>
+      </div>
+      <div class="hex-row">
+        <span class="hex-label">RESTORED</span>
+        <div class="hex-bytes" id="hex-restored-result"></div>
+      </div>
+      <a class="download-btn" id="dl-restored">⬇ 복구된 파일 다운로드</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  SIGMASK · ALL PROCESSING IS DONE CLIENT-SIDE · NO UPLOAD · NO SERVER
+</footer>
+
+<script>
+// ───────── 파일 시그니처 DB ─────────
+const SIG_DB = [
+  { sig: [0x89,0x50,0x4E,0x47], name: 'PNG Image' },
+  { sig: [0xFF,0xD8,0xFF], name: 'JPEG Image' },
+  { sig: [0x47,0x49,0x46,0x38], name: 'GIF Image' },
+  { sig: [0x25,0x50,0x44,0x46], name: 'PDF Document' },
+  { sig: [0x50,0x4B,0x03,0x04], name: 'ZIP / Office (OOXML)' },
+  { sig: [0x52,0x61,0x72,0x21], name: 'RAR Archive' },
+  { sig: [0x37,0x7A,0xBC,0xAF], name: '7-Zip Archive' },
+  { sig: [0x1F,0x8B], name: 'GZIP Archive' },
+  { sig: [0xD0,0xCF,0x11,0xE0], name: 'MS Office (Legacy)' },
+  { sig: [0x4D,0x5A], name: 'Windows PE (EXE/DLL)' },
+  { sig: [0x7F,0x45,0x4C,0x46], name: 'ELF Binary (Linux)' },
+  { sig: [0xFF,0xFB], name: 'MP3 Audio' },
+  { sig: [0x49,0x44,0x33], name: 'MP3 (ID3 tag)' },
+  { sig: [0x00,0x00,0x00,0x20,0x66,0x74,0x79,0x70], name: 'MP4 Video' },
+  { sig: [0x42,0x4D], name: 'BMP Image' },
+  { sig: [0x49,0x49,0x2A,0x00], name: 'TIFF Image (LE)' },
+  { sig: [0x4D,0x4D,0x00,0x2A], name: 'TIFF Image (BE)' },
+  { sig: [0xCA,0xFE,0xBA,0xBE], name: 'Java Class File' },
+  { sig: [0x75,0x73,0x74,0x61,0x72], name: 'TAR Archive' },
+  { sig: [0x23,0x21], name: 'Script (Shebang)' },
+];
+
+function detectSig(bytes) {
+  for (const s of SIG_DB) {
+    if (s.sig.every((b, i) => bytes[i] === b)) return s.name;
+  }
+  return null;
+}
+
+// ───────── 상태 ─────────
+let hideFile = null, restoreFile = null, metaData = null;
+
+// ───────── 탭 전환 ─────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.${tab}-tab`).classList.add('active');
+  document.getElementById(`panel-${tab}`).classList.add('active');
+}
+
+// ───────── 복구 방식 변경 ─────────
+document.getElementById('method-restore').addEventListener('change', function() {
+  document.getElementById('xor-restore-opts').style.display = this.value === 'xor' ? '' : 'none';
+  document.getElementById('meta-restore-opts').style.display = this.value === 'meta' ? '' : 'none';
+});
+
+// ───────── 파일 로드 ─────────
+function loadFile(mode) {
+  const input = document.getElementById(`file-${mode}`);
+  const file = input.files[0];
+  if (!file) return;
+
+  if (mode === 'hide') hideFile = file;
+  else restoreFile = file;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const buf = new Uint8Array(e.target.result);
+    const preview = Array.from(buf.slice(0, 16));
+    const hexContainer = document.getElementById(`hex-original-${mode}`);
+    hexContainer.innerHTML = '';
+    preview.forEach(b => {
+      const span = document.createElement('span');
+      span.className = 'hex-byte original';
+      span.textContent = b.toString(16).padStart(2,'0').toUpperCase();
+      hexContainer.appendChild(span);
+    });
+
+    document.getElementById(`fname-${mode}`).textContent = file.name;
+    document.getElementById(`fsize-${mode}`).textContent = formatSize(file.size);
+    document.getElementById(`file-card-${mode}`).classList.add('visible');
+
+    if (mode === 'hide') {
+      const sigEl = document.getElementById('sig-type-hide');
+      const detected = detectSig(buf);
+      if (detected) {
+        sigEl.textContent = '✦ ' + detected;
+        sigEl.className = 'sig-detected known';
+      } else {
+        sigEl.textContent = 'Unknown file type';
+        sigEl.className = 'sig-detected unknown';
+      }
+      document.getElementById('btn-hide').disabled = false;
+    } else {
+      document.getElementById('btn-restore').disabled = false;
+    }
+
+    document.getElementById(`result-${mode}`).classList.remove('visible');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function loadMeta() {
+  const file = document.getElementById('meta-file').files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      metaData = JSON.parse(e.target.result);
+      document.getElementById('meta-filename').textContent = file.name;
+    } catch {
+      alert('유효하지 않은 .sigmask 파일임');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(2) + ' MB';
+}
+
+// ───────── 시그니처 변형 ─────────
+function processHide() {
+  if (!hideFile) return;
+  const btn = document.getElementById('btn-hide');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 처리 중...';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const buf = new Uint8Array(e.target.result);
+    const method = document.getElementById('method-hide').value;
+    const size = Math.min(parseInt(document.getElementById('sig-size').value) || 8, buf.length);
+    const XOR_KEY = 0xAA;
+
+    const original = Array.from(buf.slice(0, size));
+    const modified = new Uint8Array(buf);
+
+    if (method === 'xor') {
+      for (let i = 0; i < size; i++) modified[i] = buf[i] ^ XOR_KEY;
+    } else if (method === 'zero') {
+      for (let i = 0; i < size; i++) modified[i] = 0x00;
+    } else if (method === 'reverse') {
+      for (let i = 0; i < size; i++) modified[i] = (~buf[i]) & 0xFF;
+    }
+
+    const afterBytes = Array.from(modified.slice(0, size));
+
+    // hex 미리보기
+    const beforeEl = document.getElementById('hex-before-result');
+    const afterEl = document.getElementById('hex-after-result');
+    beforeEl.innerHTML = '';
+    afterEl.innerHTML = '';
+    original.forEach(b => {
+      const s = document.createElement('span');
+      s.className = 'hex-byte original';
+      s.textContent = b.toString(16).padStart(2,'0').toUpperCase();
+      beforeEl.appendChild(s);
+    });
+    afterBytes.forEach(b => {
+      const s = document.createElement('span');
+      s.className = 'hex-byte modified';
+      s.textContent = b.toString(16).padStart(2,'0').toUpperCase();
+      afterEl.appendChild(s);
+    });
+
+    // 변형 파일 다운로드
+    const blob = new Blob([modified], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const dlHidden = document.getElementById('dl-hidden');
+    dlHidden.href = url;
+    dlHidden.download = hideFile.name + '.masked';
+
+    // 메타데이터 저장 (NULL 방식은 필수, XOR/NOT는 참고용)
+    const meta = {
+      originalName: hideFile.name,
+      method,
+      size,
+      xorKey: XOR_KEY,
+      originalBytes: original,
+      timestamp: new Date().toISOString()
+    };
+    const metaBlob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' });
+    const metaUrl = URL.createObjectURL(metaBlob);
+    const dlMeta = document.getElementById('dl-meta');
+    dlMeta.href = metaUrl;
+    dlMeta.download = hideFile.name + '.sigmask';
+
+    document.getElementById('result-hide').classList.add('visible');
+
+    btn.disabled = false;
+    btn.innerHTML = '🔒 시그니처 변형 실행';
+  };
+  reader.readAsArrayBuffer(hideFile);
+}
+
+// ───────── 시그니처 복구 ─────────
+function processRestore() {
+  if (!restoreFile) return;
+  const btn = document.getElementById('btn-restore');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 복구 중...';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const buf = new Uint8Array(e.target.result);
+    const method = document.getElementById('method-restore').value;
+    const restored = new Uint8Array(buf);
+
+    if (method === 'xor') {
+      const key = parseInt(document.getElementById('xor-key-restore').value) || 0xAA;
+      const size = Math.min(parseInt(document.getElementById('sig-size-restore').value) || 8, buf.length);
+      for (let i = 0; i < size; i++) restored[i] = buf[i] ^ key;
+
+    } else if (method === 'reverse') {
+      const size = Math.min(parseInt(document.getElementById('sig-size-restore').value) || 8, buf.length);
+      for (let i = 0; i < size; i++) restored[i] = (~buf[i]) & 0xFF;
+
+    } else if (method === 'meta') {
+      if (!metaData) {
+        alert('.sigmask 파일을 먼저 불러와야 해!');
+        btn.disabled = false;
+        btn.innerHTML = '🔓 원본 복구 실행';
+        return;
+      }
+      const origBytes = metaData.originalBytes;
+      for (let i = 0; i < origBytes.length && i < restored.length; i++) {
+        restored[i] = origBytes[i];
+      }
+    }
+
+    const restoredBytes = Array.from(restored.slice(0, 16));
+    const restoredEl = document.getElementById('hex-restored-result');
+    restoredEl.innerHTML = '';
+    restoredBytes.forEach(b => {
+      const s = document.createElement('span');
+      s.className = 'hex-byte restored';
+      s.textContent = b.toString(16).padStart(2,'0').toUpperCase();
+      restoredEl.appendChild(s);
+    });
+
+    // 복구된 파일명 결정
+    let origName = restoreFile.name;
+    if (origName.endsWith('.masked')) origName = origName.slice(0, -7);
+    if (metaData && metaData.originalName) origName = metaData.originalName;
+
+    const blob = new Blob([restored], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const dlRestored = document.getElementById('dl-restored');
+    dlRestored.href = url;
+    dlRestored.download = origName;
+
+    document.getElementById('result-restore').classList.add('visible');
+
+    btn.disabled = false;
+    btn.innerHTML = '🔓 원본 복구 실행';
+  };
+  reader.readAsArrayBuffer(restoreFile);
+}
+
+// ───────── 드래그 앤 드롭 ─────────
+['hide', 'restore'].forEach(mode => {
+  const zone = document.getElementById(`dropzone-${mode}`);
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    document.getElementById(`file-${mode}`).files; // just to satisfy
+    if (mode === 'hide') hideFile = file;
+    else restoreFile = file;
+    // re-trigger logic
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById(`file-${mode}`).files = dt.files;
+    loadFile(mode);
+  });
+});
+</script>
+</body>
+</html>
