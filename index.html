@@ -3,828 +3,762 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SigMask v2 — File Disguise Tool</title>
+<title>SigMask v3</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #07070d;
-  --surface: #0f0f18;
-  --surface2: #16161f;
-  --surface3: #1e1e2a;
-  --border: #252535;
-  --border2: #32324a;
-  --accent:  #00ffaa;
-  --accent2: #ff3d6b;
-  --accent3: #4d9eff;
-  --accent4: #ffcc00;
-  --text: #dde0f0;
-  --muted: #555570;
-  --mono: 'JetBrains Mono', monospace;
-  --display: 'Syne', sans-serif;
+:root{
+  --bg:#06060c;--surface:#0e0e17;--surface2:#151520;--surface3:#1c1c28;
+  --border:#222232;--border2:#2e2e42;
+  --accent:#00ffaa;--accent2:#ff3d6b;--accent3:#4d9eff;--accent4:#ffcc00;--accent5:#cc88ff;
+  --text:#dde0f0;--muted:#50506a;
+  --mono:'JetBrains Mono',monospace;--display:'Syne',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;}
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:var(--mono);
-  min-height:100vh;
-  overflow-x:hidden;
-}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
 body::before{
-  content:'';
-  position:fixed;inset:0;
-  background-image:
-    linear-gradient(rgba(0,255,170,.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,255,170,.025) 1px,transparent 1px);
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,255,170,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,170,.02) 1px,transparent 1px);
   background-size:48px 48px;
-  pointer-events:none;z-index:0;
 }
-body::after{
-  content:'';
-  position:fixed;
-  top:-40%;left:-20%;
-  width:70%;height:70%;
-  background:radial-gradient(ellipse,rgba(77,158,255,.04) 0%,transparent 70%);
-  pointer-events:none;z-index:0;
-}
-
-/* ── LAYOUT ── */
 .container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:44px 24px 100px;}
 
-/* ── HEADER ── */
-header{margin-bottom:44px;}
-.logo-tag{font-size:10px;letter-spacing:.35em;color:var(--accent);text-transform:uppercase;opacity:.65;display:block;margin-bottom:6px;}
-h1{font-family:var(--display);font-size:clamp(30px,6vw,50px);font-weight:800;line-height:1;letter-spacing:-.025em;}
+/* HEADER */
+.logo-tag{font-size:9px;letter-spacing:.35em;color:var(--accent);text-transform:uppercase;opacity:.6;display:block;margin-bottom:6px;}
+h1{font-family:var(--display);font-size:clamp(28px,6vw,48px);font-weight:800;line-height:1;letter-spacing:-.025em;}
 h1 em{color:var(--accent);font-style:normal;}
-h1 span{color:var(--accent2);font-style:normal;}
-.subtitle{font-size:11px;color:var(--muted);letter-spacing:.1em;margin-top:10px;}
+h1 b{color:var(--accent5);font-style:normal;}
+.subtitle{font-size:10px;color:var(--muted);letter-spacing:.1em;margin-top:8px;}
+.v3-badge{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 12px;
+  background:rgba(204,136,255,.1);border:1px solid rgba(204,136,255,.3);
+  border-radius:20px;font-size:10px;color:var(--accent5);letter-spacing:.1em;
+  margin-top:10px;
+}
 
-/* ── FLOW DIAGRAM ── */
-.flow-bar{
-  display:flex;align-items:center;gap:0;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;padding:14px 20px;margin-bottom:32px;overflow-x:auto;
+/* SECURITY INDICATOR */
+.sec-bar{
+  display:flex;gap:8px;margin:28px 0;flex-wrap:wrap;
 }
-.flow-step{
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  min-width:80px;flex-shrink:0;
+.sec-pill{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  font-size:10px;letter-spacing:.08em;color:var(--muted);
 }
-.flow-icon{font-size:20px;}
-.flow-label{font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;text-align:center;}
-.flow-arrow{color:var(--border2);font-size:18px;margin:0 8px;flex-shrink:0;padding-bottom:16px;}
-.flow-step.active .flow-label{color:var(--accent4);}
-.flow-step.active .flow-icon{filter:drop-shadow(0 0 6px var(--accent4));}
+.sec-pill.on{background:rgba(0,255,170,.06);border-color:rgba(0,255,170,.25);color:var(--accent);}
+.sec-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
 
-/* ── TABS ── */
-.tabs{
-  display:flex;border:1px solid var(--border);border-radius:10px;
-  overflow:hidden;margin-bottom:28px;background:var(--surface);
-}
+/* TABS */
+.tabs{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:24px;background:var(--surface);}
 .tab-btn{
-  flex:1;padding:14px 16px;background:transparent;border:none;
-  color:var(--muted);font-family:var(--mono);font-size:11px;
-  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
-  transition:all .2s;position:relative;display:flex;
-  align-items:center;justify-content:center;gap:8px;
+  flex:1;padding:13px 14px;background:transparent;border:none;color:var(--muted);
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;position:relative;display:flex;align-items:center;justify-content:center;gap:7px;
 }
 .tab-btn+.tab-btn{border-left:1px solid var(--border);}
 .tab-btn.active{background:var(--surface2);color:var(--text);}
-.tab-btn.active::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
-}
-.tab-btn.t-disguise.active::after{background:var(--accent2);}
-.tab-btn.t-restore.active::after{background:var(--accent);}
-.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
-.dot-r{background:var(--accent2);box-shadow:0 0 6px var(--accent2);}
-.dot-g{background:var(--accent);box-shadow:0 0 6px var(--accent);}
+.tab-btn.t-dis.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent2);}
+.tab-btn.t-res.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+.dot-r{background:var(--accent2);box-shadow:0 0 5px var(--accent2);}
+.dot-g{background:var(--accent);box-shadow:0 0 5px var(--accent);}
 
-/* ── PANEL ── */
+/* PANEL */
 .panel{display:none;}
 .panel.active{display:block;animation:fadeUp .3s ease;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 
-/* ── SECTION LABEL ── */
-.sec-label{
-  font-size:9px;letter-spacing:.25em;text-transform:uppercase;
-  color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;
-}
-.sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
+/* STEP CARD */
+.step-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px;margin-bottom:12px;position:relative;}
+.step-num{position:absolute;top:14px;right:16px;font-size:26px;font-family:var(--display);font-weight:800;color:var(--border2);line-height:1;user-select:none;}
+.step-title{font-family:var(--display);font-size:13px;font-weight:700;margin-bottom:4px;}
+.step-desc{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.65;}
 
-/* ── STEP CARDS (numbered) ── */
-.step-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;padding:20px 22px;margin-bottom:14px;
-  position:relative;
-}
-.step-num{
-  position:absolute;top:14px;right:16px;
-  font-size:28px;font-family:var(--display);font-weight:800;
-  color:var(--border2);line-height:1;user-select:none;
-}
-.step-title{
-  font-family:var(--display);font-size:13px;font-weight:700;
-  color:var(--text);margin-bottom:4px;
-}
-.step-desc{font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.6;}
-
-/* ── DROPZONE ── */
+/* DROPZONE */
 .dropzone{
-  border:1.5px dashed var(--border);border-radius:8px;
-  padding:36px 24px;text-align:center;cursor:pointer;
-  transition:all .25s;background:var(--surface2);position:relative;overflow:hidden;
+  border:1.5px dashed var(--border);border-radius:8px;padding:32px 20px;text-align:center;
+  cursor:pointer;transition:all .25s;background:var(--surface2);position:relative;overflow:hidden;
 }
-.dropzone:hover,.dropzone.dragover{
-  border-color:var(--accent3);background:rgba(77,158,255,.05);
-}
-.dropzone.zone-red:hover,.dropzone.zone-red.dragover{
-  border-color:var(--accent2);background:rgba(255,61,107,.05);
-}
-.dropzone input[type=file]{
-  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
-}
-.drop-icon{font-size:30px;margin-bottom:10px;display:block;}
-.drop-title{font-family:var(--display);font-size:14px;font-weight:700;margin-bottom:5px;}
-.drop-sub{font-size:10px;color:var(--muted);letter-spacing:.05em;}
+.dropzone:hover,.dropzone.dragover{border-color:var(--accent3);background:rgba(77,158,255,.05);}
+.dropzone.zone-red:hover,.dropzone.zone-red.dragover{border-color:var(--accent2);background:rgba(255,61,107,.05);}
+.dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.drop-icon{font-size:28px;margin-bottom:8px;display:block;}
+.drop-title{font-family:var(--display);font-size:13px;font-weight:700;margin-bottom:4px;}
+.drop-sub{font-size:10px;color:var(--muted);}
 
-/* ── FILE CARD ── */
-.file-card{
-  display:none;background:var(--surface2);border:1px solid var(--border);
-  border-radius:8px;padding:16px 18px;margin-top:12px;gap:14px;align-items:flex-start;
-}
+/* FILE CARD */
+.file-card{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-top:10px;gap:12px;align-items:flex-start;}
 .file-card.visible{display:flex;}
 .file-meta{flex:1;min-width:0;}
-.file-name{
-  font-family:var(--display);font-weight:700;font-size:13px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;
-}
-.file-size{font-size:10px;color:var(--muted);margin-bottom:10px;}
-
-/* ── HEX VIEWER ── */
-.hex-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap;}
-.hex-label{
-  font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;
-  width:72px;flex-shrink:0;padding-top:3px;
-}
+.file-name{font-family:var(--display);font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.file-size{font-size:10px;color:var(--muted);margin-bottom:8px;}
+.hex-row{display:flex;gap:6px;align-items:flex-start;margin-bottom:5px;flex-wrap:wrap;}
+.hex-lbl{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;width:68px;flex-shrink:0;padding-top:3px;}
 .hex-bytes{display:flex;gap:3px;flex-wrap:wrap;}
-.hb{
-  font-size:11px;padding:2px 5px;border-radius:3px;
-  border:1px solid var(--border);background:var(--bg);
-  letter-spacing:.05em;font-family:var(--mono);
-}
-.hb.c-orig{color:var(--accent3);border-color:rgba(77,158,255,.3);}
-.hb.c-mod {color:var(--accent2);border-color:rgba(255,61,107,.3);}
-.hb.c-res {color:var(--accent); border-color:rgba(0,255,170,.3);}
-.hb.c-txt {color:var(--accent4);border-color:rgba(255,204,0,.3);}
-
-.sig-badge{
-  display:inline-block;margin-top:8px;font-size:9px;padding:3px 10px;
-  border-radius:20px;letter-spacing:.1em;text-transform:uppercase;
-}
+.hb{font-size:11px;padding:2px 5px;border-radius:3px;border:1px solid var(--border);background:var(--bg);font-family:var(--mono);}
+.hb.c-o{color:var(--accent3);border-color:rgba(77,158,255,.3);}
+.hb.c-m{color:var(--accent2);border-color:rgba(255,61,107,.3);}
+.hb.c-r{color:var(--accent);border-color:rgba(0,255,170,.3);}
+.sig-badge{display:inline-block;margin-top:6px;font-size:9px;padding:2px 9px;border-radius:20px;letter-spacing:.1em;text-transform:uppercase;}
 .sig-badge.known{background:rgba(77,158,255,.1);color:var(--accent3);border:1px solid rgba(77,158,255,.3);}
-.sig-badge.unknown{background:rgba(102,102,128,.1);color:var(--muted);border:1px solid var(--border);}
+.sig-badge.unk{background:rgba(80,80,106,.1);color:var(--muted);border:1px solid var(--border);}
 
-/* ── OPTION ROWS ── */
-.opt-grid{display:flex;flex-direction:column;gap:12px;}
-.opt-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-.opt-lbl{font-size:12px;color:var(--text);flex:1;min-width:160px;}
-.opt-lbl small{display:block;font-size:10px;color:var(--muted);margin-top:2px;}
+/* OPTIONS */
+.opt-grid{display:flex;flex-direction:column;gap:10px;}
+.opt-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.opt-lbl{font-size:11px;color:var(--text);flex:1;min-width:150px;}
+.opt-lbl small{display:block;font-size:9px;color:var(--muted);margin-top:2px;}
 select,input[type=number],input[type=text]{
   background:var(--bg);border:1px solid var(--border);color:var(--text);
-  font-family:var(--mono);font-size:12px;padding:7px 12px;border-radius:6px;
-  outline:none;transition:border-color .2s;min-width:180px;
+  font-family:var(--mono);font-size:11px;padding:7px 10px;border-radius:6px;
+  outline:none;transition:border-color .2s;min-width:160px;
 }
 select:focus,input:focus{border-color:var(--accent3);}
-textarea.txt-preview{
+textarea.txt-edit{
   background:var(--bg);border:1px solid var(--border);color:var(--accent4);
   font-family:var(--mono);font-size:11px;padding:10px 12px;border-radius:6px;
-  width:100%;resize:vertical;min-height:80px;outline:none;
-  transition:border-color .2s;line-height:1.6;
+  width:100%;resize:vertical;min-height:72px;outline:none;transition:border-color .2s;line-height:1.6;
 }
-textarea.txt-preview:focus{border-color:var(--accent4);}
+textarea.txt-edit:focus{border-color:var(--accent4);}
 
-/* ── WARN / INFO BOX ── */
-.warn-box{
-  background:rgba(255,200,30,.05);border:1px solid rgba(255,200,30,.2);
-  border-radius:8px;padding:12px 15px;font-size:11px;color:#ffcc44;
-  line-height:1.65;margin-top:14px;display:flex;gap:10px;align-items:flex-start;
+/* KEY DISPLAY */
+.key-display{
+  background:var(--bg);border:1px solid var(--border2);border-radius:8px;
+  padding:12px 16px;display:flex;align-items:center;gap:12px;margin-top:10px;
 }
-.info-box{
-  background:rgba(0,255,170,.04);border:1px solid rgba(0,255,170,.15);
-  border-radius:8px;padding:12px 15px;font-size:11px;color:var(--accent);
-  line-height:1.65;display:flex;gap:10px;align-items:flex-start;
+.key-val{font-size:18px;font-weight:700;font-family:var(--mono);color:var(--accent5);}
+.key-info{font-size:10px;color:var(--muted);line-height:1.6;}
+.reroll-btn{
+  margin-left:auto;padding:6px 14px;background:transparent;border:1px solid var(--border2);
+  border-radius:6px;color:var(--muted);font-family:var(--mono);font-size:10px;cursor:pointer;
+  transition:all .2s;
 }
+.reroll-btn:hover{border-color:var(--accent5);color:var(--accent5);}
 
-/* ── STRUCTURE VIZ ── */
-.struct-viz{
-  display:flex;align-items:stretch;gap:0;margin-top:14px;
-  border:1px solid var(--border);border-radius:8px;overflow:hidden;
-  font-size:10px;
-}
-.sv-block{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:10px 8px;text-align:center;gap:4px;
-}
-.sv-block .sv-icon{font-size:18px;}
-.sv-block .sv-name{font-size:9px;letter-spacing:.1em;text-transform:uppercase;}
-.sv-block .sv-size{font-size:9px;color:var(--muted);}
-.sv-txt{background:rgba(255,204,0,.08);flex:0 0 auto;width:180px;border-right:1px solid var(--border);}
-.sv-sep{background:rgba(255,61,107,.08);flex:0 0 36px;border-right:1px solid var(--border);}
+/* STRUCT VIZ */
+.struct-viz{display:flex;align-items:stretch;margin-top:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:10px;}
+.sv{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 6px;text-align:center;gap:3px;}
+.sv .si{font-size:16px;}
+.sv .sn{font-size:8px;letter-spacing:.1em;text-transform:uppercase;}
+.sv .ss{font-size:8px;color:var(--muted);}
+.sv-txt{background:rgba(255,204,0,.06);flex:0 0 auto;width:160px;border-right:1px solid var(--border);}
+.sv-sep{background:rgba(204,136,255,.08);flex:0 0 32px;border-right:1px solid var(--border);}
 .sv-body{background:rgba(77,158,255,.06);flex:1;}
-.sv-name.yellow{color:var(--accent4);}
-.sv-name.red{color:var(--accent2);}
-.sv-name.blue{color:var(--accent3);}
+.c-y{color:var(--accent4);}
+.c-p{color:var(--accent5);}
+.c-b{color:var(--accent3);}
 
-/* ── BUTTON ── */
-.btn{
-  display:inline-flex;align-items:center;gap:8px;padding:13px 24px;
-  border-radius:8px;border:none;font-family:var(--mono);font-size:12px;
-  font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
-  transition:all .2s;margin-top:18px;width:100%;justify-content:center;
-}
-.btn:disabled{opacity:.3;cursor:not-allowed;}
-.btn-disguise{
-  background:var(--accent2);color:#fff;
-  box-shadow:0 0 24px rgba(255,61,107,.25);
-}
-.btn-disguise:not(:disabled):hover{box-shadow:0 0 36px rgba(255,61,107,.5);transform:translateY(-1px);}
-.btn-restore{
-  background:var(--accent);color:#07070d;
-  box-shadow:0 0 24px rgba(0,255,170,.2);
-}
-.btn-restore:not(:disabled):hover{box-shadow:0 0 36px rgba(0,255,170,.4);transform:translateY(-1px);}
+/* WARN / INFO */
+.warn-box{background:rgba(255,200,30,.05);border:1px solid rgba(255,200,30,.2);border-radius:8px;padding:11px 14px;font-size:11px;color:#ffcc44;line-height:1.65;margin-top:12px;display:flex;gap:9px;align-items:flex-start;}
+.info-box{background:rgba(0,255,170,.04);border:1px solid rgba(0,255,170,.15);border-radius:8px;padding:11px 14px;font-size:11px;color:var(--accent);line-height:1.65;display:flex;gap:9px;align-items:flex-start;}
+.err-box{background:rgba(255,61,107,.05);border:1px solid rgba(255,61,107,.25);border-radius:8px;padding:11px 14px;font-size:11px;color:var(--accent2);line-height:1.65;display:flex;gap:9px;align-items:flex-start;}
 
-/* ── RESULT BLOCK ── */
-.result-block{
-  display:none;margin-top:18px;background:var(--surface2);
-  border:1px solid var(--border);border-radius:10px;padding:20px 22px;
-  animation:fadeUp .3s ease;
-}
+/* BUTTON */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;border:none;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;margin-top:16px;width:100%;justify-content:center;}
+.btn:disabled{opacity:.25;cursor:not-allowed;}
+.btn-dis{background:var(--accent2);color:#fff;box-shadow:0 0 22px rgba(255,61,107,.2);}
+.btn-dis:not(:disabled):hover{box-shadow:0 0 34px rgba(255,61,107,.45);transform:translateY(-1px);}
+.btn-res{background:var(--accent);color:#06060c;box-shadow:0 0 22px rgba(0,255,170,.18);}
+.btn-res:not(:disabled):hover{box-shadow:0 0 34px rgba(0,255,170,.38);transform:translateY(-1px);}
+
+/* RESULT */
+.result-block{display:none;margin-top:16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px 20px;animation:fadeUp .3s ease;}
 .result-block.visible{display:block;}
-.result-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-.result-title{font-family:var(--display);font-weight:700;font-size:15px;}
-.rt-red{color:var(--accent2);}
-.rt-green{color:var(--accent);}
-.dl-btn{
-  display:inline-flex;align-items:center;gap:8px;padding:9px 18px;
-  background:transparent;border:1px solid var(--border);border-radius:6px;
-  color:var(--text);font-family:var(--mono);font-size:11px;cursor:pointer;
-  transition:all .2s;text-decoration:none;margin-top:8px;letter-spacing:.07em;margin-right:8px;
-}
+.result-hdr{display:flex;align-items:center;gap:9px;margin-bottom:14px;}
+.rt{font-family:var(--display);font-weight:700;font-size:14px;}
+.rt-r{color:var(--accent2);}
+.rt-g{color:var(--accent);}
+.dl-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .2s;text-decoration:none;margin-top:6px;letter-spacing:.07em;margin-right:6px;}
 .dl-btn:hover{border-color:var(--accent3);color:var(--accent3);}
-.dl-btn.dl-main{border-color:var(--accent2);color:var(--accent2);}
-.dl-btn.dl-main:hover{background:rgba(255,61,107,.08);}
-.dl-btn.dl-green{border-color:var(--accent);color:var(--accent);}
-.dl-btn.dl-green:hover{background:rgba(0,255,170,.08);}
+.dl-btn.dl-r{border-color:var(--accent2);color:var(--accent2);}
+.dl-btn.dl-r:hover{background:rgba(255,61,107,.08);}
+.dl-btn.dl-g{border-color:var(--accent);color:var(--accent);}
+.dl-btn.dl-g:hover{background:rgba(0,255,170,.08);}
 
-/* ── SPINNER ── */
 @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-.spinner{
-  display:inline-block;width:13px;height:13px;
-  border:2px solid rgba(255,255,255,.2);border-top-color:currentColor;
-  border-radius:50%;animation:spin .6s linear infinite;
-}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.15);border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;}
 
-/* ── FOOTER ── */
-footer{
-  position:relative;z-index:1;text-align:center;font-size:9px;
-  color:var(--muted);letter-spacing:.12em;padding:20px;
-  border-top:1px solid var(--border);margin-top:60px;
-}
+footer{position:relative;z-index:1;text-align:center;font-size:9px;color:var(--muted);letter-spacing:.12em;padding:18px;border-top:1px solid var(--border);margin-top:56px;}
 </style>
 </head>
 <body>
 <div class="container">
 
-<!-- HEADER -->
-<header>
-  <span class="logo-tag">// file disguise tool v2.0</span>
-  <h1>Sig<em>Mask</em> <span>v2</span></h1>
-  <p class="subtitle">TXT CAMOUFLAGE + SIGNATURE OBFUSCATION · CLIENT-SIDE ONLY · NO UPLOAD</p>
+<header style="margin-bottom:28px;">
+  <span class="logo-tag">// file disguise tool v3.0 — hardened</span>
+  <h1>Sig<em>Mask</em> <b>v3</b></h1>
+  <p class="subtitle">KEYSTREAM XOR · ENCRYPTED SEPARATOR · RANDOMIZED CAMOUFLAGE · CLIENT-SIDE ONLY</p>
+  <div class="v3-badge">🔐 V3 HARDENED EDITION</div>
 </header>
 
-<!-- TABS -->
-<div class="tabs">
-  <button class="tab-btn t-disguise active" onclick="switchTab('disguise')">
-    <span class="dot dot-r"></span> 위장 변형
-  </button>
-  <button class="tab-btn t-restore" onclick="switchTab('restore')">
-    <span class="dot dot-g"></span> 원본 복구
-  </button>
+<!-- 보안 기능 표시 -->
+<div class="sec-bar">
+  <div class="sec-pill on"><span class="sec-dot"></span>랜덤 키 자동생성</div>
+  <div class="sec-pill on"><span class="sec-dot"></span>SHA-256 키스트림 XOR</div>
+  <div class="sec-pill on"><span class="sec-dot"></span>구분자 암호화 은닉</div>
+  <div class="sec-pill on"><span class="sec-dot"></span>랜덤 위장 텍스트</div>
+  <div class="sec-pill on"><span class="sec-dot"></span>패턴 분석 불가</div>
 </div>
 
-<!-- ════════════════════════════════
-     TAB: 위장 변형
-════════════════════════════════ -->
-<div class="panel active" id="panel-disguise">
+<div class="tabs">
+  <button class="tab-btn t-dis active" onclick="switchTab('dis')"><span class="dot dot-r"></span>위장 변형</button>
+  <button class="tab-btn t-res" onclick="switchTab('res')"><span class="dot dot-g"></span>원본 복구</button>
+</div>
 
-  <!-- STEP 1 : 파일 선택 -->
+<!-- ══════════════ 위장 변형 탭 ══════════════ -->
+<div class="panel active" id="panel-dis">
+
+  <!-- STEP 1 -->
   <div class="step-card">
     <div class="step-num">01</div>
     <div class="step-title">원본 파일 선택</div>
-    <div class="step-desc">위장할 원본 파일을 업로드해. 모든 형식 가능.</div>
-    <div class="dropzone zone-red" id="dz-disguise">
-      <input type="file" id="f-disguise" onchange="loadDisguise()">
+    <div class="step-desc">위장할 파일 업로드. 모든 형식 지원.</div>
+    <div class="dropzone zone-red" id="dz-dis">
+      <input type="file" id="f-dis" onchange="loadDis()">
       <span class="drop-icon">📁</span>
       <div class="drop-title">파일 드롭 또는 클릭</div>
-      <div class="drop-sub">drag &amp; drop · click to browse · all formats</div>
+      <div class="drop-sub">drag &amp; drop · all formats</div>
     </div>
-    <div class="file-card" id="fc-disguise">
-      <span style="font-size:28px;flex-shrink:0">📄</span>
+    <div class="file-card" id="fc-dis">
+      <span style="font-size:26px;flex-shrink:0">📄</span>
       <div class="file-meta">
-        <div class="file-name" id="fn-disguise">—</div>
-        <div class="file-size" id="fs-disguise">—</div>
+        <div class="file-name" id="fn-dis">—</div>
+        <div class="file-size" id="fs-dis">—</div>
         <div class="hex-row">
-          <span class="hex-label">ORIGINAL</span>
-          <div class="hex-bytes" id="hx-orig-disguise"></div>
+          <span class="hex-lbl">ORIGINAL</span>
+          <div class="hex-bytes" id="hx-o-dis"></div>
         </div>
-        <span class="sig-badge" id="sb-disguise"></span>
+        <span class="sig-badge" id="sb-dis"></span>
       </div>
     </div>
   </div>
 
-  <!-- STEP 2 : TXT 위장 텍스트 -->
+  <!-- STEP 2: 키 -->
   <div class="step-card">
     <div class="step-num">02</div>
-    <div class="step-title">TXT 위장 헤더 설정</div>
-    <div class="step-desc">파일 맨 앞에 삽입될 텍스트야. 메모장으로 열면 이 내용이 먼저 보임. 구분자(SIGMASK_BEGIN)는 자동으로 삽입돼서 나중에 복구 기준점이 됨.</div>
+    <div class="step-title">암호 키 설정</div>
+    <div class="step-desc">
+      단일 XOR 키 대신 <strong>SHA-256 기반 키스트림</strong>을 사용해. 같은 평문도 매번 다른 암호문이 나오고, HxD에서 패턴 분석이 불가능해짐.<br>
+      <span style="color:var(--accent5);font-size:10px;">⚠ 이 키를 잃어버리면 절대 복구 불가. .sigmask 파일이 키를 담고 있어.</span>
+    </div>
     <div class="opt-grid">
       <div class="opt-row">
-        <div class="opt-lbl">위장 텍스트 템플릿 <small>미리 선택하거나 직접 편집</small></div>
+        <div class="opt-lbl">키 모드 <small>랜덤 권장 — 직접 입력도 가능</small></div>
+        <select id="key-mode" onchange="onKeyModeChange()">
+          <option value="random">🎲 랜덤 자동생성 (권장)</option>
+          <option value="manual">✏️ 직접 입력</option>
+        </select>
+      </div>
+    </div>
+    <div class="key-display" id="key-display">
+      <div>
+        <div style="font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;">GENERATED KEY</div>
+        <div class="key-val" id="key-val-show">—</div>
+      </div>
+      <div class="key-info" id="key-info-show"></div>
+      <button class="reroll-btn" onclick="rerollKey()" id="reroll-btn">🎲 재생성</button>
+    </div>
+    <div id="manual-key-wrap" style="display:none;margin-top:10px;">
+      <input type="text" id="manual-key-input" placeholder="키 문자열 입력 (영문/숫자, 최소 8자)" style="width:100%">
+    </div>
+  </div>
+
+  <!-- STEP 3: 위장 텍스트 -->
+  <div class="step-card">
+    <div class="step-num">03</div>
+    <div class="step-title">위장 텍스트 설정</div>
+    <div class="step-desc">파일 앞에 붙는 평문 텍스트. 날짜·이름·숫자를 <strong>매번 랜덤하게 변환</strong>해서 동일 패턴이 남지 않아.</div>
+    <div class="opt-grid">
+      <div class="opt-row">
+        <div class="opt-lbl">템플릿 <small>선택 후 랜덤화 버튼으로 변형</small></div>
         <select id="txt-preset" onchange="applyPreset()">
           <option value="meeting">회의록 메모</option>
           <option value="todo">TODO 리스트</option>
           <option value="log">시스템 로그</option>
-          <option value="config">설정 메모</option>
+          <option value="config">설정 파일 메모</option>
+          <option value="diary">개인 일지</option>
           <option value="custom">직접 입력</option>
         </select>
+        <button class="reroll-btn" onclick="randomizeTxt()" style="margin-left:0;">🎲 랜덤화</button>
       </div>
-      <textarea class="txt-preview" id="txt-content" rows="5"></textarea>
-    </div>
-    <!-- 구조 시각화 -->
-    <div class="struct-viz">
-      <div class="sv-block sv-txt">
-        <span class="sv-icon">📝</span>
-        <span class="sv-name yellow">TXT 헤더</span>
-        <span class="sv-size">위장 텍스트<br>+ 구분자</span>
-      </div>
-      <div class="sv-block sv-sep">
-        <span class="sv-icon">🔑</span>
-        <span class="sv-name red">SIG</span>
-        <span class="sv-size">XOR<br>변형</span>
-      </div>
-      <div class="sv-block sv-body">
-        <span class="sv-icon">💾</span>
-        <span class="sv-name blue">원본 데이터</span>
-        <span class="sv-size">나머지 바이트<br>원본 그대로</span>
-      </div>
+      <textarea class="txt-edit" id="txt-content" rows="5"></textarea>
     </div>
   </div>
 
-  <!-- STEP 3 : XOR 변형 설정 -->
+  <!-- STEP 4: 구분자 -->
   <div class="step-card">
-    <div class="step-num">03</div>
-    <div class="step-title">XOR 변형 설정</div>
-    <div class="step-desc">원본 파일 <strong>전체 바이트</strong>를 XOR 변형 — HxD로 열어도 시그니처·내용 모두 식별 불가.</div>
-    <div class="opt-grid">
-      <div class="opt-row">
-        <div class="opt-lbl">XOR 키 (1~255) <small>기본값 0xAA=170 · 복구 시 동일 키 필요 · 0은 무변형이므로 피할 것</small></div>
-        <input type="number" id="xor-key-d" value="170" min="1" max="255">
-      </div>
+    <div class="step-num">04</div>
+    <div class="step-title">구분자 은닉 (V3 신기능)</div>
+    <div class="step-desc">
+      V2는 <code style="color:var(--accent2);font-size:10px;">===SIGMASK_BEGIN===</code> 구분자가 평문으로 노출됐어.<br>
+      V3는 <strong>구분자 자체를 키 파생 해시로 대체</strong>해서 .sigmask 없이는 위치 자체를 찾을 수 없어.
+    </div>
+    <div class="struct-viz">
+      <div class="sv sv-txt"><span class="si">📝</span><span class="sn c-y">평문 헤더</span><span class="ss">위장 텍스트</span></div>
+      <div class="sv sv-sep"><span class="si">🔑</span><span class="sn c-p">암호화<br>구분자</span><span class="ss">16B<br>은닉</span></div>
+      <div class="sv sv-body"><span class="si">💾</span><span class="sn c-b">키스트림 XOR<br>암호화 바디</span><span class="ss">원본 전체<br>패턴 없음</span></div>
     </div>
     <div class="warn-box">
       <span>⚠️</span>
-      <span>출력 파일은 <strong>.txt</strong> 확장자. 메모장으로 열면 위장 텍스트만 보이고, HxD로 열어도 헤더 이후는 의미없는 바이트 덩어리로 보임. <strong>.sigmask</strong> 메타파일도 꼭 같이 보관해.</span>
+      <span><strong>.sigmask 파일</strong>이 키·구분자 위치·원본 파일명을 담아. 이걸 잃으면 복구 불가. 원본과 <strong>분리 보관</strong> 필수.</span>
     </div>
   </div>
 
-  <button class="btn btn-disguise" id="btn-disguise" disabled onclick="processDisguise()">
-    🎭 TXT 위장 + 시그니처 변형 실행
+  <button class="btn btn-dis" id="btn-dis" disabled onclick="processDisguise()">
+    🎭 V3 위장 실행
   </button>
 
-  <!-- RESULT -->
-  <div class="result-block" id="res-disguise">
-    <div class="result-header">
-      <span>🎭</span><span class="result-title rt-red">위장 완료</span>
-    </div>
-    <div class="hex-row">
-      <span class="hex-label">BEFORE</span>
-      <div class="hex-bytes" id="hx-before"></div>
-    </div>
-    <div class="hex-row">
-      <span class="hex-label">AFTER</span>
-      <div class="hex-bytes" id="hx-after"></div>
-    </div>
-    <div style="margin-top:12px;font-size:11px;color:var(--muted);">
-      📦 출력 구조: <span id="struct-info" style="color:var(--accent4)"></span>
-    </div>
-    <div style="margin-top:16px;">
-      <a class="dl-btn dl-main" id="dl-disguised">⬇ 위장된 .txt 파일 다운로드</a>
-      <a class="dl-btn" id="dl-sigmask">⬇ 메타파일 (.sigmask) 다운로드</a>
+  <div class="result-block" id="res-dis">
+    <div class="result-hdr"><span>🎭</span><span class="rt rt-r">위장 완료</span></div>
+    <div class="hex-row"><span class="hex-lbl">BEFORE</span><div class="hex-bytes" id="hx-before"></div></div>
+    <div class="hex-row"><span class="hex-lbl">AFTER</span><div class="hex-bytes" id="hx-after"></div></div>
+    <div style="margin-top:10px;font-size:10px;color:var(--muted);">구조: <span id="struct-info" style="color:var(--accent4)"></span></div>
+    <div style="margin-top:14px;">
+      <a class="dl-btn dl-r" id="dl-dis">⬇ 위장된 .txt 다운로드</a>
+      <a class="dl-btn" id="dl-sig">⬇ .sigmask 키파일 다운로드</a>
     </div>
   </div>
 </div>
 
+<!-- ══════════════ 복구 탭 ══════════════ -->
+<div class="panel" id="panel-res">
 
-<!-- ════════════════════════════════
-     TAB: 원본 복구
-════════════════════════════════ -->
-<div class="panel" id="panel-restore">
-
-  <div class="info-box" style="margin-bottom:20px;">
+  <div class="info-box" style="margin-bottom:16px;">
     <span>ℹ️</span>
-    <span>위장된 <strong>.txt 파일</strong>과 <strong>.sigmask 메타파일</strong>을 함께 불러오면 자동으로 복구할 수 있어. 메타파일 없이도 수동으로 XOR 키/크기 입력해서 복구 가능.</span>
+    <span>V3 복구는 <strong>.sigmask 키파일 필수</strong>. 키파일 없이는 구분자 위치도, 키스트림도 재현 불가.</span>
   </div>
 
-  <!-- STEP 1 : 위장 파일 -->
+  <!-- STEP 1 -->
   <div class="step-card">
     <div class="step-num">01</div>
-    <div class="step-title">위장된 파일 선택</div>
-    <div class="step-desc">SigMask로 위장된 .txt 파일을 업로드해.</div>
-    <div class="dropzone" id="dz-restore">
-      <input type="file" id="f-restore" onchange="loadRestore()">
+    <div class="step-title">위장 파일 선택</div>
+    <div class="step-desc">SigMask v3로 위장된 .txt 파일 업로드.</div>
+    <div class="dropzone" id="dz-res">
+      <input type="file" id="f-res" onchange="loadRes()">
       <span class="drop-icon">📄</span>
       <div class="drop-title">위장 파일 드롭 또는 클릭</div>
-      <div class="drop-sub">.txt (disguised) · drag &amp; drop supported</div>
+      <div class="drop-sub">.txt (disguised) · drag &amp; drop</div>
     </div>
-    <div class="file-card" id="fc-restore">
-      <span style="font-size:28px;flex-shrink:0">📄</span>
+    <div class="file-card" id="fc-res">
+      <span style="font-size:26px;flex-shrink:0">📄</span>
       <div class="file-meta">
-        <div class="file-name" id="fn-restore">—</div>
-        <div class="file-size" id="fs-restore">—</div>
-        <div class="hex-row">
-          <span class="hex-label">CURRENT</span>
-          <div class="hex-bytes" id="hx-orig-restore"></div>
-        </div>
-        <div id="restore-preview-label" style="font-size:10px;color:var(--accent4);margin-top:8px;"></div>
+        <div class="file-name" id="fn-res">—</div>
+        <div class="file-size" id="fs-res">—</div>
+        <div class="hex-row"><span class="hex-lbl">CURRENT</span><div class="hex-bytes" id="hx-o-res"></div></div>
+        <div id="res-preview-lbl" style="font-size:10px;color:var(--accent4);margin-top:6px;"></div>
       </div>
     </div>
   </div>
 
-  <!-- STEP 2 : 메타파일 -->
+  <!-- STEP 2 -->
   <div class="step-card">
     <div class="step-num">02</div>
-    <div class="step-title">.sigmask 메타파일 (선택)</div>
-    <div class="step-desc">메타파일이 있으면 XOR 키·크기·원본 파일명이 자동으로 채워짐. 없으면 수동 입력.</div>
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-      <label style="
-        cursor:pointer;display:inline-flex;align-items:center;gap:8px;
-        padding:9px 16px;border:1px solid var(--border);border-radius:6px;
-        font-size:11px;font-family:var(--mono);color:var(--text);
-        transition:border-color .2s;
-      " onmouseover="this.style.borderColor='var(--accent3)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div class="step-title">.sigmask 키파일 로드</div>
+    <div class="step-desc">V3에서 생성된 .sigmask 파일. 키·구분자 해시·원본 파일명 포함.</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <label style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:var(--mono);color:var(--text);transition:border-color .2s;"
+        onmouseover="this.style.borderColor='var(--accent3)'" onmouseout="this.style.borderColor='var(--border)'">
         📎 .sigmask 파일 선택
         <input type="file" id="f-meta" accept=".sigmask" style="display:none" onchange="loadMeta()">
       </label>
-      <span id="meta-fname" style="font-size:11px;color:var(--accent);"></span>
+      <span id="meta-loaded" style="font-size:11px;color:var(--accent);"></span>
     </div>
+    <div id="meta-preview" style="display:none;margin-top:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:10px;color:var(--muted);line-height:1.8;"></div>
   </div>
 
-  <!-- STEP 3 : 수동 옵션 -->
-  <div class="step-card" id="manual-opts">
-    <div class="step-num">03</div>
-    <div class="step-title">복구 파라미터</div>
-    <div class="step-desc">메타파일 로드 시 자동 채워짐. 수동 입력도 가능.</div>
-    <div class="opt-grid">
-      <div class="opt-row">
-        <div class="opt-lbl">원본 파일명 <small>복구 후 저장될 파일명</small></div>
-        <input type="text" id="orig-name" placeholder="예: photo.png">
-      </div>
-      <div class="opt-row">
-        <div class="opt-lbl">XOR 키 (0~255) <small>변형 시 사용한 키</small></div>
-        <input type="number" id="xor-key-r" value="170" min="0" max="255">
-      </div>
-
-    </div>
-  </div>
-
-  <button class="btn btn-restore" id="btn-restore" disabled onclick="processRestore()">
-    🔓 원본 파일 복구 실행
+  <button class="btn btn-res" id="btn-res" disabled onclick="processRestore()">
+    🔓 원본 파일 복구
   </button>
 
-  <!-- RESULT -->
-  <div class="result-block" id="res-restore">
-    <div class="result-header">
-      <span>✅</span><span class="result-title rt-green">복구 완료</span>
-    </div>
-    <div class="hex-row">
-      <span class="hex-label">RESTORED</span>
-      <div class="hex-bytes" id="hx-restored"></div>
-    </div>
-    <div id="restored-sig-label" style="margin-top:8px;font-size:11px;color:var(--accent);"></div>
-    <div style="margin-top:16px;">
-      <a class="dl-btn dl-green" id="dl-restored">⬇ 복구된 원본 파일 다운로드</a>
+  <div class="result-block" id="res-res">
+    <div class="result-hdr"><span>✅</span><span class="rt rt-g">복구 완료</span></div>
+    <div class="hex-row"><span class="hex-lbl">RESTORED</span><div class="hex-bytes" id="hx-rest"></div></div>
+    <div id="rest-sig-lbl" style="margin-top:6px;font-size:11px;color:var(--accent);"></div>
+    <div style="margin-top:14px;">
+      <a class="dl-btn dl-g" id="dl-rest">⬇ 복구된 원본 파일 다운로드</a>
     </div>
   </div>
-</div>
 
+</div>
 </div><!-- /container -->
 
-<footer>SIGMASK v2 · ALL PROCESSING CLIENT-SIDE · NO FILE LEAVES YOUR BROWSER</footer>
+<footer>SIGMASK V3 · KEYSTREAM XOR · ALL PROCESSING CLIENT-SIDE · NO FILE LEAVES YOUR BROWSER</footer>
 
-<!-- ════════ SCRIPT ════════ -->
 <script>
-// ── 상수 ──
-const SEPARATOR = '\n\n===SIGMASK_BEGIN===\n';
-const SIG_DB = [
-  {sig:[0x89,0x50,0x4E,0x47],name:'PNG Image'},
-  {sig:[0xFF,0xD8,0xFF],name:'JPEG Image'},
-  {sig:[0x47,0x49,0x46,0x38],name:'GIF Image'},
-  {sig:[0x25,0x50,0x44,0x46],name:'PDF Document'},
-  {sig:[0x50,0x4B,0x03,0x04],name:'ZIP / Office (OOXML)'},
-  {sig:[0x52,0x61,0x72,0x21],name:'RAR Archive'},
-  {sig:[0x37,0x7A,0xBC,0xAF],name:'7-Zip Archive'},
-  {sig:[0x1F,0x8B],name:'GZIP Archive'},
-  {sig:[0xD0,0xCF,0x11,0xE0],name:'MS Office (Legacy)'},
-  {sig:[0x4D,0x5A],name:'Windows PE (EXE/DLL)'},
-  {sig:[0x7F,0x45,0x4C,0x46],name:'ELF Binary (Linux)'},
-  {sig:[0xFF,0xFB],name:'MP3 Audio'},
-  {sig:[0x49,0x44,0x33],name:'MP3 (ID3 tag)'},
-  {sig:[0x00,0x00,0x00,0x20,0x66,0x74,0x79,0x70],name:'MP4 Video'},
-  {sig:[0x42,0x4D],name:'BMP Image'},
-  {sig:[0xCA,0xFE,0xBA,0xBE],name:'Java Class File'},
-  {sig:[0x23,0x21],name:'Script (Shebang)'},
-];
+// ═══════════════════════════════════════════════
+//  CRYPTO UTILS
+// ═══════════════════════════════════════════════
+
+// SHA-256 → Uint8Array
+async function sha256(data){
+  const buf = typeof data==='string' ? new TextEncoder().encode(data) : data;
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return new Uint8Array(hash);
+}
+
+// PBKDF2 키스트림 생성 (keyStr, salt="sigmask_v3", length바이트)
+// → Web Crypto PBKDF2 + HKDF 조합으로 임의 길이 키스트림 생성
+async function deriveKeystream(keyStr, totalBytes){
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', enc.encode(keyStr), 'PBKDF2', false, ['deriveBits']
+  );
+  // 32바이트 블록씩 나눠서 충분한 키스트림 생성
+  const blockSize = 32;
+  const blocks = Math.ceil(totalBytes / blockSize);
+  const stream = new Uint8Array(blocks * blockSize);
+  for(let i=0; i<blocks; i++){
+    const bits = await crypto.subtle.deriveBits(
+      {name:'PBKDF2', salt: enc.encode('sigmask_v3_blk_'+i), iterations: 1, hash:'SHA-256'},
+      keyMaterial, 256
+    );
+    stream.set(new Uint8Array(bits), i*blockSize);
+  }
+  return stream.slice(0, totalBytes);
+}
+
+// 구분자 해시 생성 (16바이트): SHA-256(key+"_sep")[0:16]
+async function makeSepHash(keyStr){
+  const h = await sha256(keyStr + '_sigmask_sep_v3');
+  return h.slice(0, 16);
+}
+
+// ═══════════════════════════════════════════════
+//  랜덤 텍스트 생성기
+// ═══════════════════════════════════════════════
+const NAMES = ['김민준','이서연','박지호','최수아','정우진','강하은','조현우','윤지아','임태양','한소희'];
+const DEPTS = ['개발팀','기획팀','운영팀','인프라팀','보안팀','데이터팀'];
+const TOPICS = ['시스템 점검','분기 리뷰','예산 검토','보안 감사','성능 개선','배포 일정'];
+
+function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function rndInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function rndDate(){
+  const y=2024+Math.floor(Math.random()*2);
+  const m=String(rndInt(1,12)).padStart(2,'0');
+  const d=String(rndInt(1,28)).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+function rndTime(){ return `${rndInt(9,17).toString().padStart(2,'0')}:${rndInt(0,5)*10||'00'}`; }
+
 const PRESETS = {
-  meeting:`회의록 메모\n날짜: 2025-01-15\n참석자: 김팀장, 이대리, 박주임\n\n안건 1) Q1 목표 수립\n- 매출 목표 15% 향상\n- 인력 채용 계획 검토\n\n안건 2) 시스템 유지보수 일정 조율\n- 다음 주 목요일 오후 2시 확정`,
-  todo:`TODO List - 업무 정리\n\n[완료]\n✓ 주간 보고서 제출\n✓ 거래처 이메일 회신\n\n[진행 중]\n○ 기획안 초안 작성 (마감: 금요일)\n○ 서버 점검 스케줄 확인\n\n[예정]\n△ 월간 회의 자료 준비\n△ 연간 예산 검토`,
-  log:`[SYSTEM LOG]\n2025-01-15 09:00:01 INFO  Service started\n2025-01-15 09:00:05 INFO  Config loaded: default\n2025-01-15 09:01:12 DEBUG Connection pool initialized (max=10)\n2025-01-15 09:05:33 INFO  Scheduled task registered\n2025-01-15 10:00:00 INFO  Health check OK\n2025-01-15 11:23:47 WARN  High memory usage: 78%`,
-  config:`# Application Config Notes\n# Last modified: 2025-01-15\n\nserver:\n  host: localhost\n  port: 8080\n  timeout: 30\n\ndatabase:\n  pool_size: 5\n  retry: 3\n\n# TODO: update credentials before deploy`,
-  custom:'여기에 위장 텍스트를 입력하세요.\n메모장으로 열었을 때 보일 내용이에요.',
+  meeting:()=>{
+    const names=[rnd(NAMES),rnd(NAMES),rnd(NAMES)];
+    return `${rnd(TOPICS)} 회의록\n날짜: ${rndDate()}\n참석자: ${names.join(', ')}\n\n1. ${rnd(TOPICS)}\n   - 세부 내용 검토 완료\n   - 다음 단계: ${rndInt(1,4)}주 내 실행\n\n2. ${rnd(TOPICS)} 논의\n   - ${rnd(DEPTS)} 협조 요청\n   - 일정: ${rndDate()} ${rndTime()} 확정`;
+  },
+  todo:()=>{
+    return `업무 정리 (${rndDate()})\n\n[완료]\n✓ ${rnd(TOPICS)}\n✓ ${rnd(TOPICS)} 보고서 제출\n\n[진행 중]\n○ ${rnd(TOPICS)} (마감: ${rndDate()})\n○ ${rnd(DEPTS)} 미팅 준비\n\n[예정]\n△ ${rnd(TOPICS)} 검토\n△ ${rndInt(2,8)}월 계획 수립`;
+  },
+  log:()=>{
+    const lvls=['INFO ','WARN ','DEBUG','INFO ','INFO '];
+    let lines=`[SYSTEM LOG] ${rndDate()}\n`;
+    for(let i=0;i<6;i++) lines+=`${rndDate().replace(/-/g,'/')} ${rndTime()}:${rndInt(10,59)} ${rnd(lvls)} ${rnd(['Service started','Config loaded','Task completed','Health check OK','Connection pool ready','Scheduler registered'])}\n`;
+    return lines.trim();
+  },
+  config:()=>{
+    return `# Config Notes — ${rndDate()}\n# Author: ${rnd(NAMES)}\n\nservice:\n  host: 192.168.${rndInt(1,9)}.${rndInt(10,99)}\n  port: ${rndInt(3000,9999)}\n  timeout: ${rndInt(10,60)}\n\ndatabase:\n  pool: ${rndInt(3,10)}\n  retry: ${rndInt(1,5)}\n\n# Note: ${rnd(TOPICS)} 적용 예정`;
+  },
+  diary:()=>{
+    const mood=rnd(['피곤했다','집중이 잘 됐다','생각보다 빨리 끝났다','늦게까지 했다']);
+    return `${rndDate()} 일지\n\n오늘은 ${rnd(TOPICS)} 작업을 했다.\n${mood}. ${rnd(DEPTS)}에서 요청이 왔고\n${rndInt(1,5)}개 항목을 처리했다.\n\n내일은 ${rnd(TOPICS)} 관련 미팅이 있다.\n준비 자료 미리 챙겨두기.`;
+  },
+  custom:()=> '여기에 위장 텍스트를 입력하세요.',
 };
 
-// ── 상태 ──
-let disguiseFile = null;
-let restoreFile  = null;
-let metaObj      = null;
+function applyPreset(){
+  const v = document.getElementById('txt-preset').value;
+  document.getElementById('txt-content').value = (PRESETS[v]||PRESETS.custom)();
+}
+function randomizeTxt(){
+  const v = document.getElementById('txt-preset').value;
+  document.getElementById('txt-content').value = (PRESETS[v]||PRESETS.custom)();
+}
 
-// ── 탭 전환 ──
+// ═══════════════════════════════════════════════
+//  키 관리
+// ═══════════════════════════════════════════════
+let currentKey = '';
+
+function genRandomKey(){
+  const arr = new Uint8Array(24);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,32);
+}
+
+function rerollKey(){
+  currentKey = genRandomKey();
+  document.getElementById('key-val-show').textContent = currentKey.slice(0,16)+'…';
+  document.getElementById('key-info-show').textContent = `길이: ${currentKey.length}자\nentropy: ~${(currentKey.length*4).toFixed(0)} bits`;
+}
+
+function onKeyModeChange(){
+  const mode = document.getElementById('key-mode').value;
+  document.getElementById('key-display').style.display = mode==='random' ? '' : 'none';
+  document.getElementById('manual-key-wrap').style.display = mode==='manual' ? '' : 'none';
+}
+
+function getActiveKey(){
+  const mode = document.getElementById('key-mode').value;
+  if(mode==='manual'){
+    const v = document.getElementById('manual-key-input').value.trim();
+    return v.length>=8 ? v : null;
+  }
+  return currentKey || null;
+}
+
+// ═══════════════════════════════════════════════
+//  공통 유틸
+// ═══════════════════════════════════════════════
+const SIG_DB=[
+  {sig:[0x89,0x50,0x4E,0x47],name:'PNG'},{sig:[0xFF,0xD8,0xFF],name:'JPEG'},
+  {sig:[0x47,0x49,0x46,0x38],name:'GIF'},{sig:[0x25,0x50,0x44,0x46],name:'PDF'},
+  {sig:[0x50,0x4B,0x03,0x04],name:'ZIP/OOXML'},{sig:[0x52,0x61,0x72,0x21],name:'RAR'},
+  {sig:[0x37,0x7A,0xBC,0xAF],name:'7-Zip'},{sig:[0x1F,0x8B],name:'GZIP'},
+  {sig:[0xD0,0xCF,0x11,0xE0],name:'MS Office'},{sig:[0x4D,0x5A],name:'EXE/DLL'},
+  {sig:[0x7F,0x45,0x4C,0x46],name:'ELF'},{sig:[0xCA,0xFE,0xBA,0xBE],name:'Java Class'},
+];
+function detectSig(b){ for(const s of SIG_DB) if(s.sig.every((v,i)=>b[i]===v)) return s.name; return null; }
+function fmtSize(b){ if(b<1024)return b+'B'; if(b<1048576)return(b/1024).toFixed(1)+'KB'; return(b/1048576).toFixed(2)+'MB'; }
+function renderHex(el,bytes,cls){
+  el.innerHTML='';
+  bytes.forEach(b=>{ const s=document.createElement('span'); s.className='hb '+cls; s.textContent=b.toString(16).padStart(2,'0').toUpperCase(); el.appendChild(s); });
+}
+
+// ═══════════════════════════════════════════════
+//  탭
+// ═══════════════════════════════════════════════
 function switchTab(t){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelector(`.t-${t}`).classList.add('active');
-  document.getElementById(`panel-${t}`).classList.add('active');
+  document.querySelector('.t-'+t).classList.add('active');
+  document.getElementById('panel-'+t).classList.add('active');
 }
 
-// ── 프리셋 ──
-function applyPreset(){
-  const v = document.getElementById('txt-preset').value;
-  document.getElementById('txt-content').value = PRESETS[v] || '';
-}
-// 초기 프리셋
-applyPreset();
+// ═══════════════════════════════════════════════
+//  위장 탭 — 파일 로드
+// ═══════════════════════════════════════════════
+let disFile=null, resFile=null, metaObj=null;
 
-// ── 유틸 ──
-function fmtSize(b){
-  if(b<1024)return b+' B';
-  if(b<1048576)return(b/1024).toFixed(1)+' KB';
-  return(b/1048576).toFixed(2)+' MB';
-}
-function detectSig(arr){
-  for(const s of SIG_DB) if(s.sig.every((b,i)=>arr[i]===b)) return s.name;
-  return null;
-}
-function renderHex(el, bytes, cls){
-  el.innerHTML='';
-  bytes.forEach(b=>{
-    const s=document.createElement('span');
-    s.className='hb '+cls;
-    s.textContent=b.toString(16).padStart(2,'0').toUpperCase();
-    el.appendChild(s);
-  });
-}
-
-// ── 위장 탭 : 파일 로드 ──
-function loadDisguise(){
-  const file = document.getElementById('f-disguise').files[0];
-  if(!file)return;
-  disguiseFile = file;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const buf = new Uint8Array(e.target.result);
-    document.getElementById('fn-disguise').textContent = file.name;
-    document.getElementById('fs-disguise').textContent = fmtSize(file.size);
-    renderHex(document.getElementById('hx-orig-disguise'), Array.from(buf.slice(0,16)), 'c-orig');
-    const det = detectSig(buf);
-    const sb = document.getElementById('sb-disguise');
-    sb.textContent = det ? ('✦ '+det) : 'Unknown type';
-    sb.className = 'sig-badge '+(det?'known':'unknown');
-    document.getElementById('fc-disguise').classList.add('visible');
-    document.getElementById('btn-disguise').disabled = false;
-    document.getElementById('res-disguise').classList.remove('visible');
+function loadDis(){
+  const file=document.getElementById('f-dis').files[0]; if(!file)return;
+  disFile=file;
+  const r=new FileReader();
+  r.onload=e=>{
+    const buf=new Uint8Array(e.target.result);
+    document.getElementById('fn-dis').textContent=file.name;
+    document.getElementById('fs-dis').textContent=fmtSize(file.size);
+    renderHex(document.getElementById('hx-o-dis'),Array.from(buf.slice(0,12)),'c-o');
+    const det=detectSig(buf);
+    const sb=document.getElementById('sb-dis');
+    sb.textContent=det?('✦ '+det):'Unknown type';
+    sb.className='sig-badge '+(det?'known':'unk');
+    document.getElementById('fc-dis').classList.add('visible');
+    document.getElementById('btn-dis').disabled=false;
+    document.getElementById('res-dis').classList.remove('visible');
   };
-  reader.readAsArrayBuffer(file);
+  r.readAsArrayBuffer(file);
 }
 
-// ── 위장 탭 : 처리 실행 ──
-function processDisguise(){
-  if(!disguiseFile)return;
-  const btn = document.getElementById('btn-disguise');
-  btn.disabled=true;
-  btn.innerHTML='<span class="spinner"></span> 처리 중...';
+// ═══════════════════════════════════════════════
+//  위장 탭 — 처리
+// ═══════════════════════════════════════════════
+async function processDisguise(){
+  const key = getActiveKey();
+  if(!disFile){ return; }
+  if(!key){ alert('키를 설정해줘. 랜덤 생성 또는 직접 입력 (최소 8자)'); return; }
 
-  const reader = new FileReader();
-  reader.onload = e => {
-    const buf        = new Uint8Array(e.target.result);
-    const xorKey     = parseInt(document.getElementById('xor-key-d').value)||0xAA;
-    const txtContent = document.getElementById('txt-content').value;
+  const btn=document.getElementById('btn-dis');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> 처리 중...';
 
-    // 1) 원본 시그니처 앞 16바이트 백업 (복구용)
-    const origSig = Array.from(buf.slice(0, 16));
+  const arrayBuf = await disFile.arrayBuffer();
+  const origBytes = new Uint8Array(arrayBuf);
+  const txtContent = document.getElementById('txt-content').value;
 
-    // 2) 원본 전체를 XOR 변형 ← 핵심! 시그니처 포함 모든 바이트
-    const xored = new Uint8Array(buf.length);
-    for(let i=0; i<buf.length; i++) xored[i] = buf[i] ^ xorKey;
+  // 1) 키스트림 생성 (원본 길이만큼)
+  const keystream = await deriveKeystream(key, origBytes.length);
 
-    // 3) TXT 헤더 + 구분자 → UTF-8 바이트
-    const headerText  = txtContent + SEPARATOR;
-    const enc         = new TextEncoder();
-    const headerBytes = enc.encode(headerText);
+  // 2) 원본 전체 키스트림 XOR
+  const encrypted = new Uint8Array(origBytes.length);
+  for(let i=0;i<origBytes.length;i++) encrypted[i] = origBytes[i] ^ keystream[i];
 
-    // 4) 최종 파일 = [평문 TXT 헤더] + [XOR 변형된 원본 전체]
-    const final = new Uint8Array(headerBytes.length + xored.length);
-    final.set(headerBytes, 0);
-    final.set(xored, headerBytes.length);
+  // 3) 암호화된 구분자 생성 (16바이트 해시)
+  const sepHash = await makeSepHash(key);
 
-    // hex 미리보기 (원본 앞 8바이트 vs XOR 후)
-    renderHex(document.getElementById('hx-before'), origSig.slice(0,8), 'c-orig');
-    renderHex(document.getElementById('hx-after'),  Array.from(xored.slice(0,8)), 'c-mod');
+  // 4) 헤더 텍스트 → UTF-8 바이트
+  const headerBytes = new TextEncoder().encode(txtContent);
 
-    // 구조 정보
-    document.getElementById('struct-info').textContent =
-      `평문 헤더 ${headerBytes.length}B  +  원본 전체 XOR(0x${xorKey.toString(16).toUpperCase().padStart(2,'0')}) ${buf.length}B  =  총 ${final.length}B`;
+  // 5) 최종 구조: [헤더 평문] + [암호화 구분자 16B] + [키스트림 XOR 암호문]
+  const final = new Uint8Array(headerBytes.length + sepHash.length + encrypted.length);
+  final.set(headerBytes, 0);
+  final.set(sepHash, headerBytes.length);
+  final.set(encrypted, headerBytes.length + sepHash.length);
 
-    // 위장 파일 다운로드 (.txt)
-    const outName = disguiseFile.name + '.txt';
-    const blob = new Blob([final], {type:'text/plain'});
-    const url  = URL.createObjectURL(blob);
-    const dlD  = document.getElementById('dl-disguised');
-    dlD.href = url;
-    dlD.download = outName;
+  // hex 미리보기
+  renderHex(document.getElementById('hx-before'), Array.from(origBytes.slice(0,8)), 'c-o');
+  renderHex(document.getElementById('hx-after'),  Array.from(encrypted.slice(0,8)), 'c-m');
 
-    // 메타 파일 (.sigmask)
-    const meta = {
-      version: 3,
-      originalName: disguiseFile.name,
-      xorKey,
-      origSig,                        // 앞 16바이트 백업
-      headerLength: headerBytes.length,
-      originalSize: buf.length,
-      timestamp: new Date().toISOString()
-    };
-    const mBlob = new Blob([JSON.stringify(meta,null,2)], {type:'application/json'});
-    const mUrl  = URL.createObjectURL(mBlob);
-    const dlM   = document.getElementById('dl-sigmask');
-    dlM.href = mUrl;
-    dlM.download = disguiseFile.name + '.sigmask';
+  document.getElementById('struct-info').textContent =
+    `평문헤더 ${headerBytes.length}B + 암호화구분자 16B + 키스트림XOR ${encrypted.length}B = 총 ${final.length}B`;
 
-    document.getElementById('res-disguise').classList.add('visible');
-    btn.disabled=false;
-    btn.innerHTML='🎭 TXT 위장 + 시그니처 변형 실행';
+  // 위장 파일 다운로드
+  const outName = disFile.name + '.txt';
+  const blob = new Blob([final],{type:'text/plain'});
+  const dlD = document.getElementById('dl-dis');
+  dlD.href = URL.createObjectURL(blob);
+  dlD.download = outName;
+
+  // .sigmask 메타 — 구분자 해시(hex)와 키 저장
+  const meta = {
+    version: 3,
+    originalName: disFile.name,
+    key: key,
+    sepHashHex: Array.from(sepHash).map(b=>b.toString(16).padStart(2,'0')).join(''),
+    headerLength: headerBytes.length,
+    originalSize: origBytes.length,
+    timestamp: new Date().toISOString()
   };
-  reader.readAsArrayBuffer(disguiseFile);
+  const mBlob = new Blob([JSON.stringify(meta,null,2)],{type:'application/json'});
+  const dlM = document.getElementById('dl-sig');
+  dlM.href = URL.createObjectURL(mBlob);
+  dlM.download = disFile.name + '.sigmask';
+
+  document.getElementById('res-dis').classList.add('visible');
+  btn.disabled=false; btn.innerHTML='🎭 V3 위장 실행';
 }
 
-// ── 복구 탭 : 위장 파일 로드 ──
-function loadRestore(){
-  const file = document.getElementById('f-restore').files[0];
-  if(!file)return;
-  restoreFile = file;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const buf = new Uint8Array(e.target.result);
-    document.getElementById('fn-restore').textContent = file.name;
-    document.getElementById('fs-restore').textContent = fmtSize(file.size);
-    renderHex(document.getElementById('hx-orig-restore'), Array.from(buf.slice(0,16)), 'c-txt');
-
-    // 헤더 텍스트 미리보기 (앞 200자만)
-    const dec = new TextDecoder('utf-8',{fatal:false});
-    const preview = dec.decode(buf.slice(0,300));
-    const sepIdx = preview.indexOf('===SIGMASK_BEGIN===');
-    const previewText = sepIdx > -1 ? preview.slice(0, sepIdx).trim() : preview.slice(0,150).trim();
-    const lbl = document.getElementById('restore-preview-label');
-    lbl.textContent = '💬 감지된 위장 텍스트: "' + previewText.slice(0,80).replace(/\n/g,' ') + (previewText.length>80?'...':'') + '"';
-
-    document.getElementById('fc-restore').classList.add('visible');
-    document.getElementById('btn-restore').disabled = false;
-    document.getElementById('res-restore').classList.remove('visible');
+// ═══════════════════════════════════════════════
+//  복구 탭 — 위장 파일 로드
+// ═══════════════════════════════════════════════
+function loadRes(){
+  const file=document.getElementById('f-res').files[0]; if(!file)return;
+  resFile=file;
+  const r=new FileReader();
+  r.onload=e=>{
+    const buf=new Uint8Array(e.target.result);
+    document.getElementById('fn-res').textContent=file.name;
+    document.getElementById('fs-res').textContent=fmtSize(file.size);
+    renderHex(document.getElementById('hx-o-res'),Array.from(buf.slice(0,12)),'c-o');
+    // 앞부분 평문 텍스트 미리보기
+    const dec=new TextDecoder('utf-8',{fatal:false});
+    const preview=dec.decode(buf.slice(0,200)).slice(0,100).replace(/\n/g,' ').trim();
+    document.getElementById('res-preview-lbl').textContent='💬 "'+preview+'..."';
+    document.getElementById('fc-res').classList.add('visible');
+    checkRestoreReady();
   };
-  reader.readAsArrayBuffer(file);
+  r.readAsArrayBuffer(file);
 }
 
-// ── 복구 탭 : 메타 파일 로드 ──
+// ═══════════════════════════════════════════════
+//  복구 탭 — 메타 로드
+// ═══════════════════════════════════════════════
 function loadMeta(){
-  const file = document.getElementById('f-meta').files[0];
-  if(!file)return;
-  const reader = new FileReader();
-  reader.onload = e => {
+  const file=document.getElementById('f-meta').files[0]; if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
     try{
-      metaObj = JSON.parse(e.target.result);
-      document.getElementById('meta-fname').textContent = '✓ '+file.name;
-      // 자동 채우기
-      if(metaObj.originalName) document.getElementById('orig-name').value   = metaObj.originalName;
-      if(metaObj.xorKey  != null) document.getElementById('xor-key-r').value  = metaObj.xorKey;
-      if(metaObj.sigSize != null) document.getElementById('sig-size-r').value  = metaObj.sigSize;
-    }catch{
-      alert('유효하지 않은 .sigmask 파일');
-    }
+      metaObj=JSON.parse(e.target.result);
+      document.getElementById('meta-loaded').textContent='✓ '+file.name;
+      // 미리보기
+      const pv=document.getElementById('meta-preview');
+      pv.style.display='';
+      pv.innerHTML=[
+        `원본 파일명: <span style="color:var(--accent)">${metaObj.originalName||'—'}</span>`,
+        `원본 크기: <span style="color:var(--accent)">${metaObj.originalSize ? fmtSize(metaObj.originalSize) : '—'}</span>`,
+        `버전: <span style="color:var(--accent5)">SigMask v${metaObj.version||'?'}</span>`,
+        `생성일시: <span style="color:var(--muted)">${metaObj.timestamp||'—'}</span>`,
+        `키: <span style="color:var(--accent2)">${metaObj.key ? metaObj.key.slice(0,8)+'…(은닉됨)' : '없음'}</span>`,
+      ].join('<br>');
+      checkRestoreReady();
+    }catch{ alert('유효하지 않은 .sigmask 파일'); }
   };
-  reader.readAsText(file);
+  r.readAsText(file);
 }
 
-// ── 복구 탭 : 처리 실행 ──
-function processRestore(){
-  if(!restoreFile)return;
-  const btn = document.getElementById('btn-restore');
-  btn.disabled=true;
-  btn.innerHTML='<span class="spinner"></span> 복구 중...';
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    const buf    = new Uint8Array(e.target.result);
-    const xorKey = parseInt(document.getElementById('xor-key-r').value)||0xAA;
-    let origName = document.getElementById('orig-name').value.trim();
-
-    // 1) 구분자 바이트 레벨 탐색
-    const SEP_BYTES = new TextEncoder().encode(SEPARATOR);
-    let sepStart = -1;
-    outer: for(let i=0; i<=buf.length-SEP_BYTES.length; i++){
-      for(let j=0; j<SEP_BYTES.length; j++){
-        if(buf[i+j] !== SEP_BYTES[j]) continue outer;
-      }
-      sepStart = i;
-      break;
-    }
-
-    let bodyStart;
-    if(sepStart > -1){
-      bodyStart = sepStart + SEP_BYTES.length;
-    } else if(metaObj && metaObj.headerLength != null){
-      bodyStart = metaObj.headerLength;
-    } else {
-      alert('⚠️ 구분자를 찾을 수 없어. 메타파일을 로드하거나 파일을 확인해봐.');
-      btn.disabled=false;
-      btn.innerHTML='🔓 원본 파일 복구 실행';
-      return;
-    }
-
-    // 2) XOR된 원본 데이터 추출
-    const xoredBody = buf.slice(bodyStart);
-
-    // 3) 전체 XOR 복구 (변형 시 전체를 XOR했으므로 동일 키로 전체 역산)
-    const restored = new Uint8Array(xoredBody.length);
-    for(let i=0; i<xoredBody.length; i++) restored[i] = xoredBody[i] ^ xorKey;
-
-    // 파일명 결정
-    if(!origName){
-      origName = restoreFile.name;
-      if(origName.endsWith('.txt'))    origName = origName.slice(0,-4);
-      if(origName.endsWith('.masked')) origName = origName.slice(0,-7);
-      if(metaObj && metaObj.originalName) origName = metaObj.originalName;
-    }
-
-    // hex 미리보기
-    renderHex(document.getElementById('hx-restored'), Array.from(restored.slice(0,16)), 'c-res');
-
-    // 시그니처 감지
-    const det = detectSig(restored);
-    const lbl = document.getElementById('restored-sig-label');
-    lbl.textContent = det
-      ? ('✦ 복구된 파일 형식: ' + det)
-      : '형식 자동 감지 실패 — XOR 키를 확인해봐';
-
-    // 다운로드
-    const blob = new Blob([restored], {type:'application/octet-stream'});
-    const url  = URL.createObjectURL(blob);
-    const dl   = document.getElementById('dl-restored');
-    dl.href = url;
-    dl.download = origName;
-
-    document.getElementById('res-restore').classList.add('visible');
-    btn.disabled=false;
-    btn.innerHTML='🔓 원본 파일 복구 실행';
-  };
-  reader.readAsArrayBuffer(restoreFile);
+function checkRestoreReady(){
+  const ok = resFile && metaObj;
+  document.getElementById('btn-res').disabled = !ok;
 }
 
-// ── 드래그 앤 드롭 ──
-[['dz-disguise','f-disguise', loadDisguise],
- ['dz-restore', 'f-restore',  loadRestore]
-].forEach(([dzId, inputId, fn]) => {
-  const zone = document.getElementById(dzId);
-  zone.addEventListener('dragover', e=>{e.preventDefault();zone.classList.add('dragover');});
-  zone.addEventListener('dragleave', ()=>zone.classList.remove('dragover'));
-  zone.addEventListener('drop', e=>{
-    e.preventDefault();
-    zone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if(!file)return;
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    document.getElementById(inputId).files = dt.files;
-    fn();
+// ═══════════════════════════════════════════════
+//  복구 탭 — 처리
+// ═══════════════════════════════════════════════
+async function processRestore(){
+  if(!resFile||!metaObj){ alert('.sigmask 파일을 먼저 로드해줘'); return; }
+
+  const btn=document.getElementById('btn-res');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> 복구 중...';
+
+  const arrayBuf = await resFile.arrayBuffer();
+  const buf = new Uint8Array(arrayBuf);
+
+  const key          = metaObj.key;
+  const headerLength = metaObj.headerLength;
+  const sepHashHex   = metaObj.sepHashHex;
+  const origName     = metaObj.originalName || resFile.name.replace(/\.txt$/,'');
+
+  // 1) 구분자 해시 재생성 후 위치 검증
+  const sepHash = await makeSepHash(key);
+  const sepHex  = Array.from(sepHash).map(b=>b.toString(16).padStart(2,'0')).join('');
+
+  let bodyStart;
+  if(sepHex === sepHashHex){
+    // 메타의 headerLength 사용 (가장 정확)
+    bodyStart = headerLength + 16; // 헤더 + 구분자 16B
+  } else {
+    // 바이트 탐색으로 구분자 위치 재찾기
+    let found=-1;
+    for(let i=0;i<=buf.length-16;i++){
+      if(sepHash.every((b,j)=>buf[i+j]===b)){ found=i; break; }
+    }
+    if(found===-1){ alert('구분자를 찾을 수 없음 — 키파일이 맞는지 확인해봐'); btn.disabled=false; btn.innerHTML='🔓 원본 파일 복구'; return; }
+    bodyStart = found + 16;
+  }
+
+  // 2) 암호화된 바디 추출
+  const encrypted = buf.slice(bodyStart);
+
+  // 3) 키스트림 재생성 후 XOR 복구
+  const keystream = await deriveKeystream(key, encrypted.length);
+  const restored  = new Uint8Array(encrypted.length);
+  for(let i=0;i<encrypted.length;i++) restored[i] = encrypted[i] ^ keystream[i];
+
+  // hex 미리보기
+  renderHex(document.getElementById('hx-rest'), Array.from(restored.slice(0,12)), 'c-r');
+
+  // 시그니처 감지
+  const det=detectSig(restored);
+  document.getElementById('rest-sig-lbl').textContent = det
+    ? '✦ 복구된 파일 형식: '+det
+    : '형식 자동 감지 실패 — 확장자 확인 필요';
+
+  // 다운로드
+  const blob=new Blob([restored],{type:'application/octet-stream'});
+  const dl=document.getElementById('dl-rest');
+  dl.href=URL.createObjectURL(blob);
+  dl.download=origName;
+
+  document.getElementById('res-res').classList.add('visible');
+  btn.disabled=false; btn.innerHTML='🔓 원본 파일 복구';
+}
+
+// ═══════════════════════════════════════════════
+//  드래그 앤 드롭
+// ═══════════════════════════════════════════════
+[['dz-dis','f-dis',loadDis],['dz-res','f-res',loadRes]].forEach(([dz,fi,fn])=>{
+  const z=document.getElementById(dz);
+  z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('dragover');});
+  z.addEventListener('dragleave',()=>z.classList.remove('dragover'));
+  z.addEventListener('drop',e=>{
+    e.preventDefault();z.classList.remove('dragover');
+    const f=e.dataTransfer.files[0];if(!f)return;
+    const dt=new DataTransfer();dt.items.add(f);
+    document.getElementById(fi).files=dt.files;fn();
   });
 });
+
+// ═══════════════════════════════════════════════
+//  초기화
+// ═══════════════════════════════════════════════
+rerollKey();
+applyPreset();
 </script>
 </body>
 </html>
