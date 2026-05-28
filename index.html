@@ -186,7 +186,7 @@ footer{position:relative;z-index:1;text-align:center;font-size:9px;color:var(--m
 <header style="margin-bottom:28px;">
   <span class="logo-tag">// file disguise tool v3.0 — hardened</span>
   <h1>Sig<em>Mask</em> <b>v3</b></h1>
-  <p class="subtitle">KEYSTREAM XOR · ENCRYPTED SEPARATOR · RANDOMIZED CAMOUFLAGE · CLIENT-SIDE ONLY</p>
+  <p class="subtitle">HWP CAMOUFLAGE · KEYSTREAM XOR · ENCRYPTED SEPARATOR · CLIENT-SIDE ONLY</p>
   <div class="v3-badge">🔐 V3 HARDENED EDITION</div>
 </header>
 
@@ -293,13 +293,13 @@ footer{position:relative;z-index:1;text-align:center;font-size:9px;color:var(--m
       V3는 <strong>구분자 자체를 키 파생 해시로 대체</strong>해서 .sigmask 없이는 위치 자체를 찾을 수 없어.
     </div>
     <div class="struct-viz">
-      <div class="sv sv-txt"><span class="si">📝</span><span class="sn c-y">평문 헤더</span><span class="ss">위장 텍스트</span></div>
+      <div class="sv sv-txt"><span class="si">📝</span><span class="sn c-y">HWP 시그니처<br>+위장텍스트</span><span class="ss">32B+텍스트</span></div>
       <div class="sv sv-sep"><span class="si">🔑</span><span class="sn c-p">암호화<br>구분자</span><span class="ss">16B<br>은닉</span></div>
       <div class="sv sv-body"><span class="si">💾</span><span class="sn c-b">키스트림 XOR<br>암호화 바디</span><span class="ss">원본 전체<br>패턴 없음</span></div>
     </div>
     <div class="warn-box">
       <span>⚠️</span>
-      <span><strong>.sigmask 파일</strong>이 키·구분자 위치·원본 파일명을 담아. 이걸 잃으면 복구 불가. 원본과 <strong>분리 보관</strong> 필수.</span>
+      <span>출력 파일은 <strong>.hwp</strong> 확장자. HxD로 열면 앞 32바이트에 <code style="color:var(--accent2)">HWP Document File</code> 시그니처가 보이고, 이후는 완전한 암호화 바이트 덩어리. <strong>.sigmask</strong> 키파일도 꼭 분리 보관해.</span>
     </div>
   </div>
 
@@ -313,7 +313,7 @@ footer{position:relative;z-index:1;text-align:center;font-size:9px;color:var(--m
     <div class="hex-row"><span class="hex-lbl">AFTER</span><div class="hex-bytes" id="hx-after"></div></div>
     <div style="margin-top:10px;font-size:10px;color:var(--muted);">구조: <span id="struct-info" style="color:var(--accent4)"></span></div>
     <div style="margin-top:14px;">
-      <a class="dl-btn dl-r" id="dl-dis">⬇ 위장된 .txt 다운로드</a>
+      <a class="dl-btn dl-r" id="dl-dis">⬇ 위장된 .hwp 다운로드</a>
       <a class="dl-btn" id="dl-sig">⬇ .sigmask 키파일 다운로드</a>
     </div>
   </div>
@@ -331,12 +331,12 @@ footer{position:relative;z-index:1;text-align:center;font-size:9px;color:var(--m
   <div class="step-card">
     <div class="step-num">01</div>
     <div class="step-title">위장 파일 선택</div>
-    <div class="step-desc">SigMask v3로 위장된 .txt 파일 업로드.</div>
+    <div class="step-desc">SigMask v3로 위장된 .hwp 파일 업로드.</div>
     <div class="dropzone" id="dz-res">
       <input type="file" id="f-res" onchange="loadRes()">
       <span class="drop-icon">📄</span>
       <div class="drop-title">위장 파일 드롭 또는 클릭</div>
-      <div class="drop-sub">.txt (disguised) · drag &amp; drop</div>
+      <div class="drop-sub">.hwp (disguised) · drag &amp; drop</div>
     </div>
     <div class="file-card" id="fc-res">
       <span style="font-size:26px;flex-shrink:0">📄</span>
@@ -381,7 +381,7 @@ footer{position:relative;z-index:1;text-align:center;font-size:9px;color:var(--m
 </div>
 </div><!-- /container -->
 
-<footer>SIGMASK V3 · KEYSTREAM XOR · ALL PROCESSING CLIENT-SIDE · NO FILE LEAVES YOUR BROWSER</footer>
+<footer>SIGMASK V3 · HWP DISGUISE · KEYSTREAM XOR · ALL PROCESSING CLIENT-SIDE · NO FILE LEAVES YOUR BROWSER</footer>
 
 <script>
 // ═══════════════════════════════════════════════
@@ -582,37 +582,48 @@ async function processDisguise(){
   // 3) 암호화된 구분자 생성 (16바이트 해시)
   const sepHash = await makeSepHash(key);
 
-  // 4) 헤더 텍스트 → UTF-8 바이트
+  // 4) HWP 5.0 시그니처 (32바이트) — 파일 맨 앞에 삽입
+  // "HWP Document File" + 0x00 패딩으로 32바이트 맞춤
+  const HWP_SIG = new Uint8Array([
+    0x48,0x57,0x50,0x20,0x44,0x6F,0x63,0x75, // "HWP Docu"
+    0x6D,0x65,0x6E,0x74,0x20,0x46,0x69,0x6C, // "ment Fil"
+    0x65,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // "e" + 패딩
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 패딩
+  ]);
+
+  // 5) 위장 텍스트 → UTF-8 바이트 (HWP처럼 보이는 내용)
   const headerBytes = new TextEncoder().encode(txtContent);
 
-  // 5) 최종 구조: [헤더 평문] + [암호화 구분자 16B] + [키스트림 XOR 암호문]
-  const final = new Uint8Array(headerBytes.length + sepHash.length + encrypted.length);
-  final.set(headerBytes, 0);
-  final.set(sepHash, headerBytes.length);
-  final.set(encrypted, headerBytes.length + sepHash.length);
+  // 6) 최종 구조: [HWP 시그니처 32B] + [위장텍스트] + [암호화 구분자 16B] + [키스트림 XOR 암호문]
+  const final = new Uint8Array(HWP_SIG.length + headerBytes.length + sepHash.length + encrypted.length);
+  final.set(HWP_SIG, 0);
+  final.set(headerBytes, HWP_SIG.length);
+  final.set(sepHash, HWP_SIG.length + headerBytes.length);
+  final.set(encrypted, HWP_SIG.length + headerBytes.length + sepHash.length);
 
   // hex 미리보기
   renderHex(document.getElementById('hx-before'), Array.from(origBytes.slice(0,8)), 'c-o');
   renderHex(document.getElementById('hx-after'),  Array.from(encrypted.slice(0,8)), 'c-m');
 
   document.getElementById('struct-info').textContent =
-    `평문헤더 ${headerBytes.length}B + 암호화구분자 16B + 키스트림XOR ${encrypted.length}B = 총 ${final.length}B`;
+    `HWP시그니처 32B + 위장텍스트 ${headerBytes.length}B + 암호화구분자 16B + 키스트림XOR ${encrypted.length}B = 총 ${final.length}B`;
 
-  // 위장 파일 다운로드
-  const outName = disFile.name + '.txt';
-  const blob = new Blob([final],{type:'text/plain'});
+  // 위장 파일 다운로드 (.hwp 위장)
+  const outName = disFile.name + '.hwp';
+  const blob = new Blob([final],{type:'application/x-hwp'});
   const dlD = document.getElementById('dl-dis');
   dlD.href = URL.createObjectURL(blob);
   dlD.download = outName;
 
-  // .sigmask 메타 — 구분자 해시(hex)와 키 저장
+  // .sigmask 메타 — headerLength는 HWP 시그니처 32B + 위장텍스트 합산
   const meta = {
     version: 3,
     originalName: disFile.name,
     key: key,
     sepHashHex: Array.from(sepHash).map(b=>b.toString(16).padStart(2,'0')).join(''),
-    headerLength: headerBytes.length,
+    headerLength: HWP_SIG.length + headerBytes.length,
     originalSize: origBytes.length,
+    disguiseExt: 'hwp',
     timestamp: new Date().toISOString()
   };
   const mBlob = new Blob([JSON.stringify(meta,null,2)],{type:'application/json'});
@@ -692,7 +703,7 @@ async function processRestore(){
   const key          = metaObj.key;
   const headerLength = metaObj.headerLength;
   const sepHashHex   = metaObj.sepHashHex;
-  const origName     = metaObj.originalName || resFile.name.replace(/\.txt$/,'');
+  const origName = metaObj.originalName || resFile.name.replace(/\.(hwp|txt)$/,'');
 
   // 1) 구분자 해시 재생성 후 위치 검증
   const sepHash = await makeSepHash(key);
